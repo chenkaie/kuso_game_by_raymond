@@ -4,18 +4,11 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 
 > 更新日期：2026-11-25。此 repository 為靜態遊戲入口與原始碼收藏。外部 Sites 的原始碼尚未匯入，外部網站的存取權與功能未重新測試。
 
-## 獨立 GitHub Pages 遊戲
-
-| 遊戲 | 最新確認版本 | 類型 | 特色 | 遊玩及原始碼 |
-|---|---|---|---|---|
-| 三國方塊無雙（Three Kingdoms Voxel Warriors） | v2.1 | 3D 動作闖關／方塊建造 | 12 位武將、6 關 Boss、哥吉拉三段變身、三種難度、中英雙語、鍵鼠及觸控 | [立即遊玩](https://chenkaie.github.io/minecraft-sanguo/) · [原始 Repo](https://github.com/chenkaie/minecraft-sanguo) |
-
-此作品已由獨立 Repo 透過 GitHub Pages 發布，Dashboard 連至該 Repo 的最新正式遊戲入口，不複製歷史版本或遊戲本體，以維持單一原始碼來源。遊戲與方塊王國 2P 分別保留，尚無證據顯示為同一作品。版本及特色依 [原始 README](https://github.com/chenkaie/minecraft-sanguo/blob/main/README.md)。
-
 ## 遊戲清單
 
-| 遊戲 | 最近確認更新 | 類型 | 入口／匯入狀態 |
+| 遊戲 | 最近確認更新／版本 | 類型 | 入口／匯入狀態及說明 |
 |---|---|---|---|
+| 三國方塊無雙（Three Kingdoms Voxel Warriors） | v2.1 | 3D 動作闖關／方塊建造 | [立即遊玩](https://chenkaie.github.io/minecraft-sanguo/) · [原始 Repo](https://github.com/chenkaie/minecraft-sanguo)；12 位武將、6 關 Boss、哥吉拉三段變身、三種難度、中英雙語、鍵鼠及觸控 |
 | 方塊王國 2P（全 3D 創造模式） | 2026-11-23 | 沙盒建造 | 待取回原始碼 |
 | 宇宙卡牌大亂鬥 | 2026-11-15 | 卡牌對戰 | [HTML 修正版](games/crossover-cards/index.html) |
 | 畫線交鋒 | 2026-11-09 | 策略對戰 | 待確認原始網址及原始碼 |
@@ -23,32 +16,20 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 新手射擊訓練場 | 2026-11-07 | 射擊 | [原始 Sites（v10）](https://easy-target-arena-kent.chenkaie.chatgpt.site) |
 | 水果貪吃蛇 | 2026-11-01 | 休閒 | [原始 Sites（v2）](https://fruit-snake-garden-kent-1101.chenkaie.chatgpt.site) |
 | 光劍合成大戰 | 2026-10-31 | 動作格鬥 | [HTML 修復版](games/lightsaber-fusion/index.html) |
+| 劍影對決｜火柴人競技場 | 2026-10-30 | 2D 劍術對戰 | [原始 Sites（v1）](https://stickman-sword-arena-kent.chenkaie.chatgpt.site)，不同於第一人稱光劍合成大戰 |
 | 雙城爭霸：未來軍團 | 2026-10-18 | 城堡攻防 | [原始 Sites（v1）](https://castle-future-legion.chenkaie.chatgpt.site) |
 | 士兵大對決 | 2026-09-15 | 3D 即時戰略 | [原始 Sites（v13）](https://soldier-clash-arena.chenkaie.chatgpt.site) |
 | 霓虹跑酷：天際衝刺 | 2026-09-10 | 3D 跑酷 | [原始 Sites（v1）](https://neon-rooftop-runner.chenkaie.chatgpt.site) |
+| 寵物／貓咪養成 | 2026-09-08 | 養成 | 寵物養成升級版，待取回原始碼 |
+| 甲蟲對戰擂台 | 2026-09-06 | 競技 | 待取回原始碼 |
+| 武士對戰遊戲 | 2026-09-06 | 2D 對戰 | 藍色武士對 AI；是否為劍影對決前身待核對 |
+| 太空戰機 | 2026-09-06 | 太空射擊 | 是否為其他太空射擊遊戲前身待核對 |
 
-## 補充：67 Project 與獨立遊戲
-
-### 已核對原始碼
+此作品已由獨立 Repo 透過 GitHub Pages 發布，Dashboard 連至該 Repo 的最新正式遊戲入口，不複製歷史版本或遊戲本體，以維持單一原始碼來源。遊戲與方塊王國 2P 分別保留，尚無證據顯示為同一作品。版本及特色依 [原始 README](https://github.com/chenkaie/minecraft-sanguo/blob/main/README.md)。
 
 `/67` 中的四個 HTML 是同一款第一人稱光劍合成大戰的迭代版本。2026-10-31 的 `光劍合成大戰_修復版.html` 已與本 repo 的 [games/lightsaber-fusion/index.html](games/lightsaber-fusion/index.html) 核對，內容相符；不重複提交前三個舊版。2026-11-01 的操作改善需求尚未取得可確認的新版原始碼。非遊戲 JPEG 不匯入公開 repository。
 
-### 補充遊戲入口
-
-| 遊戲 | 日期 | 狀態 |
-|---|---|---|
-| 劍影對決｜火柴人競技場 | 2026-10-30 | [原始 Sites（v1）](https://stickman-sword-arena-kent.chenkaie.chatgpt.site)，2D 劍術挑戰；不同於第一人稱光劍合成大戰 |
-
-### 67 Project 對話紀錄（待取回原始碼、核對是否重複）
-
-| 遊戲 | 最近確認的需求日期 | 說明 |
-|---|---|---|
-| 寵物／貓咪養成 | 2026-09-08 | 寵物養成的升級版 |
-| 甲蟲對戰擂台 | 2026-09-06 | 甲蟲競技 |
-| 武士對戰遊戲 | 2026-09-06 | 2D 藍色武士對 AI；是否為劍影對決前身待核對 |
-| 太空戰機 | 2026-09-06 | 是否為其他太空射擊遊戲前身待核對 |
-
-以上四項僅為可確認的製作對話紀錄，尚無可核對的原始碼或遊玩網址，不算作已移植遊戲。
+寵物／貓咪養成、甲蟲對戰擂台、武士對戰遊戲及太空戰機僅為可確認的製作對話紀錄，尚無可核對的原始碼或遊玩網址，不算作已移植遊戲。
 
 ## Sites 原始碼移植
 
