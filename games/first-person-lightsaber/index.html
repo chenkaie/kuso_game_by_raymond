@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第一人稱 3D 火柴人光劍對決</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4 select-none">
+    <div class="max-w-2xl w-full bg-slate-900 border-2 border-cyan-500 rounded-2xl p-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-xl font-black text-cyan-400">⚔️ 第一人稱 3D 火柴人光劍對決</h1>
+            <span id="weapon-name" class="text-sm font-bold text-amber-300">當前神兵：蒼藍光劍 (ATK 30)</span>
+        </div>
+        <canvas id="view" width="600" height="320" class="w-full bg-slate-950 rounded-xl border border-slate-700 mb-3"></canvas>
+        <div class="flex flex-wrap justify-between items-center gap-2">
+            <div class="flex gap-2">
+                <button onclick="step(-1)" class="px-4 py-2 bg-slate-700 rounded-lg font-bold">⬅️ 左移掩體</button>
+                <button onclick="step(1)" class="px-4 py-2 bg-slate-700 rounded-lg font-bold">➡️ 右移掩體</button>
+                <button onclick="slash()" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-black">⚡ 揮砍對決</button>
+            </div>
+            <div class="flex items-center gap-1 text-xs">
+                <select id="w1" class="bg-slate-800 border border-cyan-500 rounded p-1.5"><option>光劍</option><option>死神鐮刀</option><option>狂戰巨斧</option></select>
+                <span>+</span>
+                <select id="w2" class="bg-slate-800 border border-pink-500 rounded p-1.5"><option>死神鐮刀</option><option>狂戰巨斧</option><option>光劍</option></select>
+                <button onclick="fuseWeapon()" class="px-3 py-1.5 bg-purple-600 rounded font-bold">🔮 異種融合</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('view'), ctx = canvas.getContext('2d');
+        let px = 0, bob = 0, shake = 0, swing = 0, enemyHp = 150, atk = 30, wColor = '#38bdf8', wForm = '光劍';
+        function step(d) { px = Math.max(-120, Math.min(120, px + d*40)); bob += 1.5; }
+        function slash() {
+            swing = 1; shake = 10;
+            if(Math.abs(px) < 60) {
+                enemyHp -= atk;
+                if(enemyHp <= 0) enemyHp = 150;
+            }
+        }
+        function fuseWeapon() {
+            const a = document.getElementById('w1').value, b = document.getElementById('w2').value;
+            wForm = `${a}×${b}・混沌雙刃`; atk = 65; wColor = '#e879f9';
+            document.getElementById('weapon-name').textContent = `當前神兵：${wForm} (ATK ${atk})`;
+        }
+        function loop() {
+            ctx.save();
+            if(shake > 0) { ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake); shake *= 0.85; }
+            ctx.fillStyle = '#090d16'; ctx.fillRect(0,0,600,320);
+            const bobY = Math.sin(bob)*5;
+            // Perspective floor
+            ctx.strokeStyle = '#1e293b';
+            for(let i=-4;i<=4;i++){ ctx.beginPath(); ctx.moveTo(300+i*20-px*0.2, 140+bobY); ctx.lineTo(300+i*140-px, 320); ctx.stroke(); }
+            // 3D Cover Pillar
+            ctx.fillStyle = '#334155'; ctx.fillRect(160 - px, 110 + bobY, 55, 160);
+            // Enemy Stickman
+            const ex = 300 - px*0.8, ey = 145 + bobY;
+            ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(ex, ey-25, 12, 0, Math.PI*2); ctx.moveTo(ex, ey-13); ctx.lineTo(ex, ey+25); ctx.moveTo(ex-18, ey); ctx.lineTo(ex+18, ey); ctx.moveTo(ex, ey+25); ctx.lineTo(ex-12, ey+55); ctx.moveTo(ex, ey+25); ctx.lineTo(ex+12, ey+55); ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif'; ctx.fillText(`敵方劍聖 HP: ${enemyHp}`, ex-45, ey-45);
+            // First-person Weapon
+            ctx.save(); ctx.translate(450, 290 + bobY); ctx.rotate(-0.4 - swing*1.2);
+            ctx.shadowBlur = 15; ctx.shadowColor = wColor; ctx.fillStyle = wColor;
+            ctx.fillRect(-6, -150, 12, 150);
+            if(wForm.includes('鐮刀') || wForm.includes('斧')) ctx.fillRect(-45, -150, 45, 22);
+            ctx.restore();
+            swing *= 0.85;
+            ctx.restore();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

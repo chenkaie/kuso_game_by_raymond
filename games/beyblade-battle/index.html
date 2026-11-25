@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰鬥陀螺 Beyblade Battle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex flex-col items-center justify-center min-h-screen p-4 select-none">
+    <div class="max-w-xl w-full text-center">
+        <h1 class="text-3xl font-black text-cyan-400 mb-2">🌀 戰鬥陀螺 Beyblade Battle</h1>
+        <div class="flex justify-center gap-3 mb-3 text-sm">
+            <select id="blade-type" class="bg-slate-800 border border-cyan-500 rounded px-3 py-1.5 font-bold">
+                <option value="attack">⚔️ 攻擊型戰刃 (高撞擊)</option>
+                <option value="defense">🛡️ 防禦型鋼輪 (高穩重)</option>
+                <option value="stamina">⚡ 持久型軸心 (高轉速)</option>
+            </select>
+            <button onclick="launch()" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 rounded font-bold">發射對決</button>
+            <button onclick="specialSkill()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-black">🔥 必殺技</button>
+        </div>
+        <canvas id="arena" width="460" height="460" class="mx-auto rounded-full bg-slate-900 border-4 border-cyan-500 shadow-2xl"></canvas>
+        <div id="status" class="mt-3 text-lg font-bold text-amber-300">點擊「發射對決」開始碰撞競技！</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('arena'), ctx = canvas.getContext('2d');
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(f) { try { const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=f; g.gain.setValueAtTime(0.08, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.1); } catch(e){} }
+        let p1, p2, running = false;
+        function launch() {
+            const t = document.getElementById('blade-type').value;
+            p1 = { x: 160, y: 230, vx: 3.5, vy: 2.5, r: 24, spin: t==='stamina'?130:100, power: t==='attack'?1.5:1, mass: t==='defense'?1.5:1, color: '#38bdf8', angle: 0 };
+            p2 = { x: 300, y: 230, vx: -3.2, vy: -2.8, r: 24, spin: 105, power: 1.1, mass: 1.1, color: '#f43f5e', angle: 0 };
+            running = true;
+            document.getElementById('status').textContent = "競技進行中！施放必殺技加速撞擊！";
+        }
+        function specialSkill() {
+            if(!running || p1.spin < 15) return;
+            p1.spin -= 10;
+            const a = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            p1.vx += Math.cos(a) * 6; p1.vy += Math.sin(a) * 6;
+            beep(880);
+        }
+        function drawTop(b) {
+            b.angle += b.spin * 0.005;
+            ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.angle);
+            ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+            for(let i=0;i<4;i++){ ctx.rotate(Math.PI/2); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(b.r,0); ctx.stroke(); }
+            ctx.restore();
+        }
+        function loop() {
+            ctx.clearRect(0,0,460,460);
+            ctx.strokeStyle = 'rgba(56,189,248,0.2)'; ctx.beginPath(); ctx.arc(230,230,150,0,Math.PI*2); ctx.stroke();
+            if(running) {
+                [p1, p2].forEach(b => {
+                    const dx = 230 - b.x, dy = 230 - b.y;
+                    b.vx += dx * 0.0015; b.vy += dy * 0.0015;
+                    b.x += b.vx; b.y += b.vy;
+                    b.spin = Math.max(0, b.spin - 0.04);
+                    if(Math.hypot(b.x-230, b.y-230) > 205) { b.spin = 0; }
+                });
+                const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                if(dist < p1.r + p2.r) {
+                    const nx = (p2.x - p1.x)/dist, ny = (p2.y - p1.y)/dist;
+                    p1.vx -= nx * 5 / p1.mass; p1.vy -= ny * 5 / p1.mass;
+                    p2.vx += nx * 5 / p2.mass; p2.vy += ny * 5 / p2.mass;
+                    p1.spin -= 4 * p2.power; p2.spin -= 4 * p1.power;
+                    beep(300);
+                }
+                drawTop(p1); drawTop(p2);
+                if(p1.spin <= 0 || p2.spin <= 0) {
+                    running = false;
+                    document.getElementById('status').textContent = p1.spin > p2.spin ? "🏆 藍方玩家陀螺獲勝！" : "💥 紅方敵軍陀螺獲勝！";
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

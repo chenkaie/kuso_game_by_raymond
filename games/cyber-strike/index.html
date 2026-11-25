@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyber Strike: AI Core Invasion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #05050a; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        canvas { display: block; }
+        .glass-panel { background: rgba(10, 15, 30, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(0, 243, 255, 0.2); box-shadow: 0 0 20px rgba(0, 243, 255, 0.15); }
+        .neon-text-blue { text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+    </style>
+</head>
+<body class="w-screen h-screen overflow-hidden text-white">
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 z-10">
+        <div class="flex justify-between items-center w-full max-w-4xl mx-auto glass-panel p-4 rounded-xl pointer-events-auto">
+            <div class="flex items-center gap-4">
+                <div>
+                    <div class="text-xs text-cyan-400 font-bold tracking-widest">PLAYER HP</div>
+                    <div class="w-40 h-4 bg-gray-900 rounded-full overflow-hidden border border-cyan-500/30">
+                        <div id="hp-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-200" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-pink-400 font-bold tracking-widest">LEVEL <span id="level-txt">1</span></div>
+                    <div class="w-28 h-2 bg-gray-900 rounded-full overflow-hidden border border-pink-500/30 mt-1">
+                        <div id="xp-bar" class="h-full bg-gradient-to-r from-pink-500 to-purple-600 transition-all duration-200" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-6 text-right">
+                <div>
+                    <div class="text-xs text-gray-400">SCORE</div>
+                    <div id="score-txt" class="text-2xl font-black text-cyan-300 neon-text-blue">0</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400">AI TEAMMATES</div>
+                    <div id="ally-txt" class="text-xl font-black text-emerald-400">2 Drones</div>
+                </div>
+            </div>
+        </div>
+        <div id="upgrade-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center pointer-events-auto z-30">
+            <div class="glass-panel p-8 rounded-2xl max-w-lg w-full text-center border-cyan-500/50">
+                <h2 class="text-3xl font-black text-cyan-400 neon-text-blue mb-2">SYSTEM UPGRADE AVAILABLE</h2>
+                <p class="text-gray-400 text-sm mb-6">Choose an enhancement for your core fighter & squad</p>
+                <div id="upgrade-options" class="flex flex-col gap-4"></div>
+            </div>
+        </div>
+        <div id="start-modal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center pointer-events-auto z-40">
+            <div class="glass-panel p-10 rounded-2xl max-w-md w-full text-center border-cyan-500/40">
+                <h1 class="text-4xl font-black text-cyan-400 neon-text-blue mb-2">CYBER STRIKE</h1>
+                <p class="text-pink-500 font-bold tracking-widest mb-6">AI CORE INVASION</p>
+                <div class="text-left text-xs text-gray-300 bg-gray-900/60 p-4 rounded-lg mb-6 leading-relaxed border border-white/10">
+                    <p class="text-cyan-400 font-bold mb-1">🎮 CONTROLS:</p>
+                    • WASD / Arrow Keys: Move Fighter<br>• Mouse: Aim & Shoot<br><br>
+                    <p class="text-emerald-400 font-bold mb-1">🛡️ SQUAD SUPPORT:</p>
+                    • Balanced enemy cores & friendly AI Drones!
+                </div>
+                <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 font-black text-lg rounded-xl shadow-lg">START OPERATION</button>
+            </div>
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type, duration) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            try { const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration); } catch(e) {}
+        }
+        let gameActive = false, score = 0, level = 1, xp = 0, xpToNextLevel = 100;
+        const keys = {}, mouse = { x: canvas.width / 2, y: canvas.height / 2, down: true };
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+        class Player {
+            constructor() { this.x = canvas.width / 2; this.y = canvas.height / 2; this.radius = 18; this.speed = 4.5; this.hp = 100; this.maxHp = 100; this.fireRate = 140; this.lastShot = 0; this.bulletDamage = 25; this.multishot = 1; }
+            update() {
+                if (keys['KeyW'] || keys['ArrowUp']) this.y = Math.max(this.radius, this.y - this.speed);
+                if (keys['KeyS'] || keys['ArrowDown']) this.y = Math.min(canvas.height - this.radius, this.y + this.speed);
+                if (keys['KeyA'] || keys['ArrowLeft']) this.x = Math.max(this.radius, this.x - this.speed);
+                if (keys['KeyD'] || keys['ArrowRight']) this.x = Math.min(canvas.width - this.radius, this.x + this.speed);
+                if (Date.now() - this.lastShot > this.fireRate) { this.shoot(); this.lastShot = Date.now(); }
+            }
+            shoot() {
+                const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+                for (let i = 0; i < this.multishot; i++) {
+                    const spread = (i - (this.multishot - 1) / 2) * 0.15;
+                    bullets.push(new Bullet(this.x, this.y, angle + spread, true));
+                }
+            }
+            draw() {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(mouse.y - this.y, mouse.x - this.x));
+                ctx.fillStyle = '#00f3ff'; ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(-12, -14); ctx.lineTo(-6, 0); ctx.lineTo(-12, 14); ctx.closePath(); ctx.fill(); ctx.restore();
+            }
+        }
+        class AllyDrone {
+            constructor(offsetAngle) { this.offsetAngle = offsetAngle; this.orbitDistance = 45; this.x = 0; this.y = 0; this.fireRate = 250; this.lastShot = 0; }
+            update() {
+                this.offsetAngle += 0.03; this.x = player.x + Math.cos(this.offsetAngle) * this.orbitDistance; this.y = player.y + Math.sin(this.offsetAngle) * this.orbitDistance;
+                let closest = null, minDist = 350;
+                enemies.forEach(e => { const dist = Math.hypot(e.x - this.x, e.y - this.y); if (dist < minDist) { minDist = dist; closest = e; } });
+                if (closest && Date.now() - this.lastShot > this.fireRate) { bullets.push(new Bullet(this.x, this.y, Math.atan2(closest.y - this.y, closest.x - this.x), true, '#10b981')); this.lastShot = Date.now(); }
+            }
+            draw() { ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(this.x, this.y, 7, 0, Math.PI * 2); ctx.fill(); }
+        }
+        class Bullet {
+            constructor(x, y, angle, isAlly = true, color = '#00f3ff') { this.x = x; this.y = y; this.vx = Math.cos(angle) * 12; this.vy = Math.sin(angle) * 12; this.isAlly = isAlly; this.radius = 4; this.color = color; }
+            update() { this.x += this.vx; this.y += this.vy; }
+            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); }
+        }
+        class Enemy {
+            constructor() {
+                if (Math.random() < 0.5) { this.x = Math.random() < 0.5 ? -20 : canvas.width + 20; this.y = Math.random() * canvas.height; }
+                else { this.x = Math.random() * canvas.width; this.y = Math.random() < 0.5 ? -20 : canvas.height + 20; }
+                this.radius = 15; this.speed = 1.4; this.hp = 30; this.damage = 8;
+            }
+            update() { const a = Math.atan2(player.y - this.y, player.x - this.x); this.x += Math.cos(a) * this.speed; this.y += Math.sin(a) * this.speed; }
+            draw() { ctx.fillStyle = '#ff0055'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); }
+        }
+        class XpGem {
+            constructor(x, y) { this.x = x; this.y = y; this.radius = 5; this.value = 25; }
+            update() { if (Math.hypot(player.x - this.x, player.y - this.y) < 120) { const a = Math.atan2(player.y - this.y, player.x - this.x); this.x += Math.cos(a) * 7; this.y += Math.sin(a) * 7; } }
+            draw() { ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); }
+        }
+        let player, allies = [], bullets = [], enemies = [], gems = [], enemySpawnInterval;
+        function initGame() {
+            player = new Player(); allies = [new AllyDrone(0), new AllyDrone(Math.PI)]; bullets = []; enemies = []; gems = []; score = 0; level = 1; xp = 0; xpToNextLevel = 100; updateHUD();
+            clearInterval(enemySpawnInterval);
+            enemySpawnInterval = setInterval(() => { if (gameActive && enemies.length < 15) enemies.push(new Enemy()); }, 1400);
+        }
+        function updateHUD() {
+            document.getElementById('hp-bar').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+            document.getElementById('xp-bar').style.width = `${(xp / xpToNextLevel) * 100}%`;
+            document.getElementById('level-txt').innerText = level; document.getElementById('score-txt').innerText = score; document.getElementById('ally-txt').innerText = `${allies.length} Drones`;
+        }
+        function addXP(amount) {
+            xp += amount;
+            if (xp >= xpToNextLevel) { xp -= xpToNextLevel; level++; xpToNextLevel = Math.floor(xpToNextLevel * 1.4); showUpgradeModal(); }
+            updateHUD();
+        }
+        function showUpgradeModal() {
+            gameActive = false; const modal = document.getElementById('upgrade-modal'), optionsDiv = document.getElementById('upgrade-options'); optionsDiv.innerHTML = '';
+            const upgrades = [
+                { name: '⚡ Increase Fire Rate', apply: () => player.fireRate = Math.max(60, player.fireRate - 20) },
+                { name: '💥 Multi-Shot Cannon', apply: () => player.multishot += 1 },
+                { name: '🤖 Add AI Drone Squadmate', apply: () => allies.push(new AllyDrone(Math.random() * Math.PI * 2)) },
+                { name: '💚 Repair & Boost HP', apply: () => { player.maxHp += 25; player.hp = player.maxHp; } }
+            ];
+            upgrades.sort(() => 0.5 - Math.random()).slice(0, 3).forEach(up => {
+                const btn = document.createElement('button'); btn.className = 'w-full py-3 bg-cyan-950/60 border border-cyan-500/40 rounded-xl hover:bg-cyan-500/20 font-bold text-cyan-300'; btn.innerText = up.name;
+                btn.onclick = () => { up.apply(); modal.classList.add('hidden'); gameActive = true; updateHUD(); }; optionsDiv.appendChild(btn);
+            });
+            modal.classList.remove('hidden');
+        }
+        function gameLoop() {
+            ctx.fillStyle = 'rgba(5, 5, 10, 0.35)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (gameActive) {
+                player.update(); allies.forEach(a => a.update());
+                bullets.forEach((b, bi) => { b.update(); if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(bi, 1); });
+                enemies.forEach((e, ei) => {
+                    e.update();
+                    if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
+                        player.hp -= e.damage; updateHUD(); enemies.splice(ei, 1);
+                        if (player.hp <= 0) { gameActive = false; document.getElementById('start-modal').classList.remove('hidden'); }
+                    }
+                    bullets.forEach((b, bi) => {
+                        if (b.isAlly && Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
+                            e.hp -= player.bulletDamage; bullets.splice(bi, 1);
+                            if (e.hp <= 0) { score += 50; gems.push(new XpGem(e.x, e.y)); enemies.splice(ei, 1); updateHUD(); }
+                        }
+                    });
+                });
+                gems.forEach((g, gi) => { g.update(); if (Math.hypot(player.x - g.x, player.y - g.y) < player.radius + g.radius) { addXP(g.value); gems.splice(gi, 1); } });
+            }
+            gems.forEach(g => g.draw()); bullets.forEach(b => b.draw()); enemies.forEach(e => e.draw()); allies.forEach(a => a.draw()); if (player) player.draw();
+            requestAnimationFrame(gameLoop);
+        }
+        document.getElementById('start-btn').onclick = () => { document.getElementById('start-modal').classList.add('hidden'); initGame(); gameActive = true; };
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

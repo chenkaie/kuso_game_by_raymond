@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D 麥塊生存 - 武器與背包完整版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+        .crosshair {
+            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+            transform: translate(-50%, -50%); pointer-events: none;
+        }
+        .crosshair::before, .crosshair::after { content: ''; position: absolute; background: white; box-shadow: 0 0 2px black; }
+        .crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+        .crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+    </style>
+</head>
+<body class="bg-sky-400 select-none">
+
+    <!-- 開始遊戲畫面 -->
+    <div id="start-screen" class="absolute inset-0 bg-black/80 flex items-center justify-center z-40">
+        <div class="bg-gray-900 border-2 border-green-500 p-8 rounded-2xl text-center max-w-md shadow-2xl mx-4">
+            <h1 class="text-3xl font-bold text-green-400 mb-2">⚔️ 3D 麥塊生存遊戲</h1>
+            <p class="text-amber-300 text-xs font-bold tracking-widest mb-4">武器戰鬥 & 背包物品欄更新版</p>
+            <div class="text-gray-300 text-sm mb-6 leading-relaxed text-left bg-gray-800/80 p-4 rounded-xl space-y-1.5">
+                <p>🕹️ <b>移動視角</b>：左下方向鍵移動，手指拖曳螢幕轉視角</p>
+                <p>🎒 <b>背包物品欄</b>：挖掘方塊自動收入背包，點擊下方格子切換裝備</p>
+                <p>⚔️ <b>武器打怪</b>：裝備劍類武器可揮砍消滅夜晚出現的殭屍</p>
+                <p>🛠️ <b>智慧合成台</b>：打字輸入即可打造「鑽石劍」、「火焰劍」等神兵！</p>
+            </div>
+            <button id="start-btn" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold text-lg rounded-xl shadow-lg transition-all cursor-pointer">
+                ▶ 點擊開始遊戲
+            </button>
+        </div>
+    </div>
+
+    <!-- 遊戲 UI 介面 -->
+    <div id="ui-layer" class="absolute inset-0 z-10 flex flex-col justify-between p-3 pointer-events-none hidden">
+        <div class="flex justify-between items-start gap-2 pointer-events-auto">
+            <div class="flex flex-col gap-1.5">
+                <div id="time-display" class="bg-black/65 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold backdrop-blur-sm">
+                    ☀️ 白天 (生態探索)
+                </div>
+                <div class="bg-black/65 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 backdrop-blur-sm">
+                    <span>❤️ 生命:</span>
+                    <div class="w-24 h-2.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div id="hp-bar" class="bg-red-500 h-full transition-all" style="width: 100%"></div>
+                    </div>
+                    <span id="kill-count" class="text-amber-400 ml-1">💀 0</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="open-inv-btn" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-2 rounded-lg shadow-lg text-xs sm:text-sm cursor-pointer">
+                    🎒 背包
+                </button>
+                <button id="open-craft-btn" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-2 rounded-lg shadow-lg text-xs sm:text-sm cursor-pointer">
+                    🛠️ 合成台
+                </button>
+            </div>
+        </div>
+
+        <div class="crosshair"></div>
+        <div id="toast-msg" class="self-center bg-black/75 text-amber-300 px-4 py-1.5 rounded-full text-sm font-bold opacity-0 transition-opacity duration-300"></div>
+
+        <div class="flex flex-col gap-2 pointer-events-auto">
+            <div class="flex justify-between items-end px-1">
+                <div class="grid grid-cols-3 gap-1.5 w-32 h-32 sm:w-36 sm:h-36 bg-black/35 p-2 rounded-2xl backdrop-blur-sm">
+                    <div></div>
+                    <button id="btn-forward" class="bg-white/30 active:bg-white/60 text-white font-bold rounded-xl flex items-center justify-center text-lg">⬆️</button>
+                    <div></div>
+                    <button id="btn-left" class="bg-white/30 active:bg-white/60 text-white font-bold rounded-xl flex items-center justify-center text-lg">⬅️</button>
+                    <button id="btn-back" class="bg-white/30 active:bg-white/60 text-white font-bold rounded-xl flex items-center justify-center text-lg">⬇️</button>
+                    <button id="btn-right" class="bg-white/30 active:bg-white/60 text-white font-bold rounded-xl flex items-center justify-center text-lg">➡️</button>
+                </div>
+                <div class="flex flex-col gap-2.5 items-end">
+                    <button id="btn-jump" class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600/85 active:bg-blue-400 text-white font-bold rounded-full shadow-lg flex items-center justify-center text-sm sm:text-base cursor-pointer">
+                        跳躍
+                    </button>
+                    <button id="btn-action" class="w-20 h-20 sm:w-24 sm:h-24 bg-red-600/90 active:bg-red-400 text-white font-bold rounded-full shadow-lg flex flex-col items-center justify-center text-sm sm:text-base cursor-pointer border-2 border-white/30">
+                        <span id="action-icon" class="text-xl">⚔️</span>
+                        <span id="action-label">攻擊/挖掘</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center pb-1">
+                <div id="equipped-info" class="text-xs font-bold text-white bg-black/60 px-3 py-0.5 rounded-t-lg">
+                    手持：🗡️ 木劍 (攻擊力: 15)
+                </div>
+                <div id="hotbar" class="flex gap-1.5 bg-gray-900/85 p-1.5 rounded-xl border border-gray-600 backdrop-blur-md overflow-x-auto max-w-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完整背包視窗 -->
+    <div id="inventory-modal" class="absolute inset-0 bg-black/75 flex items-center justify-center hidden z-40 pointer-events-auto p-4">
+        <div class="bg-gray-800 p-5 rounded-2xl border-2 border-amber-500 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-amber-400">🎒 冒險者背包</h2>
+                <button id="close-inv" class="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm cursor-pointer">關閉</button>
+            </div>
+            <p class="text-gray-300 text-xs mb-3">點擊任意物品即可裝備至手中：</p>
+            <div id="inventory-grid" class="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto p-1"></div>
+        </div>
+    </div>
+
+    <!-- 中文智慧合成台彈窗 -->
+    <div id="crafting-modal" class="absolute inset-0 bg-black/75 flex items-center justify-center hidden z-40 pointer-events-auto p-4">
+        <div class="bg-gray-800 p-6 rounded-2xl border-2 border-orange-500 w-80 sm:w-96 shadow-2xl">
+            <h2 class="text-xl font-bold text-orange-400 mb-2">🛠️ 精緻智慧合成台</h2>
+            <p class="text-gray-300 text-xs mb-3">輸入你想打造的神兵或方塊（包含「劍、刀、斧、槍」會自動賦予高攻擊力！）：</p>
+            <input type="text" id="craft-input" class="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 mb-3 focus:outline-none focus:border-orange-500" placeholder="例如：鑽石劍、烈焰光劍、黃金方塊..." autocomplete="off">
+            <div class="flex flex-wrap gap-1.5 mb-4">
+                <button class="quick-craft text-xs bg-gray-700 hover:bg-gray-600 text-cyan-300 px-2.5 py-1 rounded cursor-pointer" data-item="鑽石神劍">鑽石神劍</button>
+                <button class="quick-craft text-xs bg-gray-700 hover:bg-gray-600 text-red-300 px-2.5 py-1 rounded cursor-pointer" data-item="烈焰光劍">烈焰光劍</button>
+                <button class="quick-craft text-xs bg-gray-700 hover:bg-gray-600 text-amber-300 px-2.5 py-1 rounded cursor-pointer" data-item="黃金戰斧">黃金戰斧</button>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="close-craft" class="px-4 py-2 bg-gray-600 text-white rounded-lg cursor-pointer">關閉</button>
+                <button id="do-craft" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 font-bold text-white rounded-lg cursor-pointer">開始合成</button>
+            </div>
+            <div id="craft-result" class="mt-3 text-green-400 text-sm font-bold text-center hidden"></div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" class="block w-full h-full"></canvas>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type = 'sine', dur = 0.08, vol = 0.1) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + dur);
+            } catch(e) {}
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 15, 65);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        scene.add(camera);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.75);
+        scene.add(hemiLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+        dirLight.position.set(20, 50, 20);
+        scene.add(dirLight);
+
+        let inventory = [
+            { id: 'wood_sword', name: '木劍', type: 'weapon', damage: 15, icon: '🗡️', color: 0xb45309, count: 1 },
+            { id: 'stone_pick', name: '石鎬', type: 'tool', damage: 8, icon: '⛏️', color: 0x9ca3af, count: 1 },
+            { id: 'grass', name: '草地磚', type: 'block', damage: 3, icon: '🟩', color: 0x4ade80, count: 5 },
+            { id: 'wood', name: '原木', type: 'block', damage: 4, icon: '🪵', color: 0x713f12, count: 3 }
+        ];
+        let selectedSlot = 0, playerHp = 100, killCount = 0;
+
+        const handGroup = new THREE.Group();
+        handGroup.position.set(0.45, -0.4, -0.7);
+        camera.add(handGroup);
+
+        let heldMesh = null, swingProgress = 0, isSwinging = false;
+
+        function updateHeldItemModel() {
+            if (heldMesh) handGroup.remove(heldMesh);
+            const item = inventory[selectedSlot];
+            if (!item) return;
+
+            if (item.type === 'weapon') {
+                const swordGroup = new THREE.Group();
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 0.04), new THREE.MeshLambertMaterial({ color: item.color, emissive: item.emissive || 0x000000, emissiveIntensity: 0.3 }));
+                blade.position.y = 0.25;
+                const guard = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.08), new THREE.MeshLambertMaterial({ color: 0xfbbf24 }));
+                guard.position.y = -0.08;
+                const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.06), new THREE.MeshLambertMaterial({ color: 0x451a03 }));
+                hilt.position.y = -0.2;
+                swordGroup.add(blade, guard, hilt);
+                swordGroup.rotation.set(0.2, -0.3, 0.2);
+                heldMesh = swordGroup;
+            } else if (item.type === 'tool') {
+                const pickGroup = new THREE.Group();
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.08, 0.08), new THREE.MeshLambertMaterial({ color: item.color }));
+                head.position.y = 0.25;
+                pickGroup.add(handle, head);
+                pickGroup.rotation.set(0.2, -0.3, 0.2);
+                heldMesh = pickGroup;
+            } else {
+                heldMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.28), new THREE.MeshLambertMaterial({ color: item.color }));
+                heldMesh.rotation.set(0.3, 0.5, 0);
+            }
+            handGroup.add(heldMesh);
+
+            const infoEl = document.getElementById('equipped-info');
+            const powerText = item.type === 'weapon' ? `攻擊力: ${item.damage}` : (item.type === 'tool' ? '挖掘加速' : `數量: ${item.count}`);
+            infoEl.textContent = `手持：${item.icon} ${item.name} (${powerText})`;
+            document.getElementById('action-icon').textContent = item.type === 'weapon' ? '⚔️' : '⛏️';
+        }
+
+        function renderInventoryUI() {
+            const hotbar = document.getElementById('hotbar'), grid = document.getElementById('inventory-grid');
+            hotbar.innerHTML = ''; grid.innerHTML = '';
+
+            inventory.slice(0, 7).forEach((item, idx) => {
+                const isSelected = idx === selectedSlot;
+                const slot = document.createElement('button');
+                slot.className = `relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex flex-col items-center justify-center border-2 transition-all cursor-pointer shrink-0 ${
+                    isSelected ? 'bg-amber-500/30 border-amber-400 scale-105' : 'bg-gray-800/90 border-gray-600 hover:border-gray-400'
+                }`;
+                slot.innerHTML = `
+                    <span class="text-xl leading-none">${item.icon}</span>
+                    <span class="text-[10px] text-white font-bold truncate w-11 text-center mt-0.5">${item.name}</span>
+                    ${item.count > 1 ? `<span class="absolute top-0.5 right-1 text-[10px] font-black text-amber-300">${item.count}</span>` : ''}
+                `;
+                slot.onclick = () => { selectedSlot = idx; renderInventoryUI(); updateHeldItemModel(); };
+                hotbar.appendChild(slot);
+            });
+
+            inventory.forEach((item, idx) => {
+                const card = document.createElement('button');
+                card.className = `p-2.5 rounded-xl border-2 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
+                    idx === selectedSlot ? 'bg-amber-600/30 border-amber-400' : 'bg-gray-900 border-gray-700 hover:border-amber-500'
+                }`;
+                card.innerHTML = `
+                    <span class="text-2xl">${item.icon}</span>
+                    <span class="text-xs font-bold text-white">${item.name}</span>
+                    <span class="text-[10px] text-gray-400">${item.type === 'weapon' ? `ATK ${item.damage}` : `數量 x${item.count}`}</span>
+                `;
+                card.onclick = () => {
+                    if (idx >= 7) { const chosen = inventory.splice(idx, 1)[0]; inventory.unshift(chosen); selectedSlot = 0; }
+                    else { selectedSlot = idx; }
+                    renderInventoryUI(); updateHeldItemModel();
+                    document.getElementById('inventory-modal').classList.add('hidden');
+                    showToast(`已裝備【${inventory[selectedSlot].name}】`);
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function addItemToInventory(newItem) {
+            const existing = inventory.find(i => i.name === newItem.name && i.type === 'block');
+            if (existing) existing.count += (newItem.count || 1);
+            else { inventory.unshift(newItem); selectedSlot = 0; }
+            renderInventoryUI(); updateHeldItemModel();
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('toast-msg');
+            el.textContent = msg; el.classList.remove('opacity-0');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.add('opacity-0'), 1600);
+        }
+
+        const blocks = [];
+        const blockGeo = new THREE.BoxGeometry(1, 1, 1);
+        const grassMat = new THREE.MeshLambertMaterial({ color: 0x4ade80 });
+        const dirtMat = new THREE.MeshLambertMaterial({ color: 0x854d0e });
+        const waterMat = new THREE.MeshLambertMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.8 });
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x713f12 });
+        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x22c55e });
+
+        for (let x = -16; x < 16; x++) {
+            for (let z = -16; z < 16; z++) {
+                const isRiver = (x > 1 && x < 4);
+                let y = isRiver ? -1 : Math.floor(Math.sin(x * 0.4) * Math.cos(z * 0.4) * 1.5);
+                const mat = isRiver ? waterMat : (y < 0 ? dirtMat : grassMat);
+                const block = new THREE.Mesh(blockGeo, mat);
+                block.position.set(x, y, z);
+                block.userData = isRiver ? { name: '河水', icon: '💧', color: 0x3b82f6 } : (y < 0 ? { name: '泥土', icon: '🟫', color: 0x854d0e } : { name: '草地磚', icon: '🟩', color: 0x4ade80 });
+                scene.add(block); blocks.push(block);
+
+                if (!isRiver && y >= 0 && Math.random() < 0.04) {
+                    for(let h = 1; h <= 3; h++) {
+                        const trunk = new THREE.Mesh(blockGeo, woodMat);
+                        trunk.position.set(x, y + h, z);
+                        trunk.userData = { name: '原木', icon: '🪵', color: 0x713f12 };
+                        scene.add(trunk); blocks.push(trunk);
+                    }
+                    const leaf = new THREE.Mesh(blockGeo, leavesMat);
+                    leaf.position.set(x, y + 4, z);
+                    leaf.userData = { name: '樹葉', icon: '🍃', color: 0x22c55e };
+                    scene.add(leaf); blocks.push(leaf);
+                }
+            }
+        }
+
+        const zombies = [];
+        const zombieMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
+        const zombieHeadMat = new THREE.MeshLambertMaterial({ color: 0x22c55e });
+
+        function spawnZombie() {
+            const zGroup = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), zombieMat); body.position.y = 0.6;
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), zombieHeadMat); head.position.y = 1.5;
+            zGroup.add(body, head);
+            const angle = Math.random() * Math.PI * 2;
+            zGroup.position.set(camera.position.x + Math.cos(angle) * 14, 0, camera.position.z + Math.sin(angle) * 14);
+            zGroup.userData = { hp: 30, maxHp: 30, hitCooldown: 0 };
+            scene.add(zGroup); zombies.push(zGroup);
+        }
+
+        camera.position.set(0, 3, 5);
+        let yaw = 0, pitch = 0, gameStarted = false;
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('ui-layer').classList.remove('hidden');
+            gameStarted = true; renderInventoryUI(); updateHeldItemModel();
+        });
+
+        const invModal = document.getElementById('inventory-modal');
+        document.getElementById('open-inv-btn').addEventListener('click', () => { renderInventoryUI(); invModal.classList.remove('hidden'); });
+        document.getElementById('close-inv').addEventListener('click', () => invModal.classList.add('hidden'));
+
+        const craftModal = document.getElementById('crafting-modal'), craftInput = document.getElementById('craft-input');
+        document.getElementById('open-craft-btn').addEventListener('click', () => craftModal.classList.remove('hidden'));
+        document.getElementById('close-craft').addEventListener('click', () => craftModal.classList.add('hidden'));
+        document.querySelectorAll('.quick-craft').forEach(btn => btn.addEventListener('click', () => { craftInput.value = btn.dataset.item; }));
+
+        document.getElementById('do-craft').addEventListener('click', () => {
+            const val = craftInput.value.trim();
+            if (!val) return;
+            const isWeapon = /劍|刀|斧|槍|矛|錘|刃|bow|sword|axe/i.test(val);
+            let color = 0x38bdf8, emissive = 0x000000, dmg = 25;
+            if (/鑽石|藍|冰|雷/.test(val)) { color = 0x06b6d4; emissive = 0x0891b2; dmg = 45; }
+            else if (/火|焰|紅|血|熔岩/.test(val)) { color = 0xef4444; emissive = 0xb91c1c; dmg = 50; }
+            else if (/金|光|聖|神/.test(val)) { color = 0xfacc15; emissive = 0xca8a04; dmg = 60; }
+            else if (/紫|暗|影|毒/.test(val)) { color = 0xa855f7; emissive = 0x7e22ce; dmg = 55; }
+
+            addItemToInventory({ id: 'custom_' + Date.now(), name: val, type: isWeapon ? 'weapon' : 'block', damage: isWeapon ? dmg : 5, icon: isWeapon ? '⚔️' : '🧱', color, emissive, count: 1 });
+            playTone(750, 'triangle', 0.15, 0.12);
+            const res = document.getElementById('craft-result');
+            res.textContent = isWeapon ? `⚔️ 鍛造成功！【${val}】(攻擊力 ${dmg}) 已裝備！` : `🧱 合成成功！【${val}】已放入物品欄！`;
+            res.classList.remove('hidden');
+            setTimeout(() => { craftModal.classList.add('hidden'); res.classList.add('hidden'); craftInput.value = ''; }, 1100);
+        });
+
+        let isDragging = false, prevPos = { x: 0, y: 0 };
+        window.addEventListener('pointerdown', (e) => {
+            if (!gameStarted) return;
+            if (e.target.closest('#ui-layer') === null && e.target.closest('#crafting-modal') === null && e.target.closest('#inventory-modal') === null) {
+                isDragging = true; prevPos = { x: e.clientX, y: e.clientY };
+            }
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging || !gameStarted) return;
+            yaw -= (e.clientX - prevPos.x) * 0.005;
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch - (e.clientY - prevPos.y) * 0.005));
+            prevPos = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('pointerup', () => { isDragging = false; });
+
+        const moveState = { forward: false, backward: false, left: false, right: false };
+        function bindBtn(id, key) {
+            const el = document.getElementById(id); if(!el) return;
+            el.addEventListener('pointerdown', (e) => { e.preventDefault(); moveState[key] = true; });
+            el.addEventListener('pointerup', (e) => { e.preventDefault(); moveState[key] = false; });
+            el.addEventListener('pointerleave', (e) => { e.preventDefault(); moveState[key] = false; });
+        }
+        bindBtn('btn-forward', 'forward'); bindBtn('btn-back', 'backward'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameStarted || !craftModal.classList.contains('hidden')) return;
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveState.forward = true;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveState.backward = true;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveState.left = true;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveState.right = true;
+            if (e.code === 'Space' && camera.position.y <= 3.1) velocityY = 6;
+            if (e.key >= '1' && e.key <= '7') { const idx = parseInt(e.key) - 1; if (inventory[idx]) { selectedSlot = idx; renderInventoryUI(); updateHeldItemModel(); } }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveState.forward = false;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveState.backward = false;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveState.left = false;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveState.right = false;
+        });
+
+        let velocityY = 0;
+        document.getElementById('btn-jump').addEventListener('click', () => { if (camera.position.y <= 3.1) velocityY = 6; });
+
+        const raycaster = new THREE.Raycaster(), centerV = new THREE.Vector2(0, 0);
+        document.getElementById('btn-action').addEventListener('click', () => {
+            isSwinging = true; swingProgress = 0;
+            const equipped = inventory[selectedSlot] || { damage: 5, type: 'hand' };
+            raycaster.setFromCamera(centerV, camera);
+
+            const zombieMeshes = [];
+            zombies.forEach(z => z.children.forEach(c => { c.userData.parentZombie = z; zombieMeshes.push(c); }));
+            const zHits = raycaster.intersectObjects(zombieMeshes);
+
+            if (zHits.length > 0 && zHits[0].distance < 5.5) {
+                const targetZ = zHits[0].object.userData.parentZombie;
+                targetZ.userData.hp -= equipped.damage;
+                playTone(220, 'sawtooth', 0.12, 0.15);
+                const knockDir = new THREE.Vector3().subVectors(targetZ.position, camera.position).normalize();
+                targetZ.position.addScaledVector(knockDir, 1.5);
+                if (targetZ.userData.hp <= 0) {
+                    scene.remove(targetZ); zombies.splice(zombies.indexOf(targetZ), 1);
+                    killCount++; document.getElementById('kill-count').textContent = `💀 ${killCount}`;
+                    showToast(`擊殺殭屍！(+1 綠寶石)`);
+                    addItemToInventory({ id: 'emerald', name: '綠寶石', type: 'block', damage: 5, icon: '💎', color: 0x10b981, count: 1 });
+                } else { showToast(`揮擊命中！造成 ${equipped.damage} 點傷害`); }
+                return;
+            }
+
+            const blockHits = raycaster.intersectObjects(blocks);
+            if (blockHits.length > 0 && blockHits[0].distance < 6) {
+                const target = blockHits[0].object, bInfo = target.userData || { name: '方塊', icon: '🧱', color: 0x9ca3af };
+                scene.remove(target); blocks.splice(blocks.indexOf(target), 1);
+                playTone(400, 'square', 0.06, 0.08);
+                addItemToInventory({ id: bInfo.name, name: bInfo.name, type: 'block', damage: 3, icon: bInfo.icon, color: bInfo.color, count: 1 });
+                showToast(`獲得【${bInfo.name}】x1`);
+            }
+        });
+
+        let dayTime = 0, prevTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now(), delta = Math.min(0.05, (time - prevTime) / 1000); prevTime = time;
+            if (gameStarted) {
+                const dir = new THREE.Vector3();
+                if (moveState.forward) dir.z -= 1; if (moveState.backward) dir.z += 1;
+                if (moveState.left) dir.x -= 1; if (moveState.right) dir.x += 1;
+                dir.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+                camera.position.addScaledVector(dir, 5.5 * delta);
+
+                velocityY -= 12 * delta; camera.position.y += velocityY * delta;
+                if (camera.position.y < 3) { camera.position.y = 3; velocityY = 0; }
+
+                camera.lookAt(new THREE.Vector3(camera.position.x + Math.sin(yaw) * Math.cos(pitch), camera.position.y + Math.sin(pitch), camera.position.z - Math.cos(yaw) * Math.cos(pitch)));
+
+                if (isSwinging) {
+                    swingProgress += delta * 12; handGroup.rotation.x = -Math.sin(swingProgress) * 1.1;
+                    if (swingProgress >= Math.PI) { isSwinging = false; handGroup.rotation.x = 0; }
+                }
+
+                dayTime += 0.0018;
+                if (Math.sin(dayTime) < -0.25) {
+                    scene.background.setHex(0x090d16); scene.fog.color.setHex(0x090d16);
+                    document.getElementById('time-display').textContent = '🌙 夜晚 (殭屍出沒！快拿武器防禦)';
+                    document.getElementById('time-display').className = 'bg-red-900/85 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold';
+                    if (zombies.length < 5 && Math.random() < 0.025) spawnZombie();
+                } else {
+                    scene.background.setHex(0x87CEEB); scene.fog.color.setHex(0x87CEEB);
+                    document.getElementById('time-display').textContent = '☀️ 白天 (生態探索模式)';
+                    document.getElementById('time-display').className = 'bg-black/65 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold';
+                    zombies.forEach(z => scene.remove(z)); zombies.length = 0;
+                }
+
+                zombies.forEach(z => {
+                    const zDir = new THREE.Vector3().subVectors(camera.position, z.position), dist = zDir.length();
+                    z.position.addScaledVector(zDir.normalize(), 1.8 * delta); z.position.y = 0; z.lookAt(camera.position.x, 0, camera.position.z);
+                    if (dist < 1.8) {
+                        z.userData.hitCooldown -= delta;
+                        if (z.userData.hitCooldown <= 0) {
+                            playerHp = Math.max(0, playerHp - 10);
+                            document.getElementById('hp-bar').style.width = `${playerHp}%`;
+                            playTone(140, 'sawtooth', 0.2, 0.15); z.userData.hitCooldown = 1.2;
+                            if (playerHp <= 0) { playerHp = 100; document.getElementById('hp-bar').style.width = '100%'; camera.position.set(0, 3, 5); showToast('💀 你被殭屍擊倒了，已於出生點重生！'); }
+                        }
+                    }
+                });
+            }
+            renderer.render(scene, camera);
+        }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        animate();
+    </script>
+</body>
+</html>

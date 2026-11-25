@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國王親征：帝國崛起</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-emerald-950 text-white min-h-screen flex flex-col items-center justify-center p-3 select-none">
+    <div class="max-w-4xl w-full bg-slate-900 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <h1 class="text-xl font-black text-amber-400">👑 國王親征：帝國崛起</h1>
+            <div class="flex gap-3 text-sm font-bold">
+                <span class="text-amber-300">💰 軍餉: <span id="gold">150</span></span>
+                <span class="text-cyan-300">⚔️ 軍團: <span id="army-cnt">0</span></span>
+                <span class="text-rose-400">🏰 敵國剩餘: <span id="enemy-bases">3</span></span>
+            </div>
+        </div>
+        <canvas id="map" width="800" height="360" class="w-full bg-emerald-900 rounded-xl border border-emerald-700 mb-3"></canvas>
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div class="grid grid-cols-3 gap-1 w-28">
+                <div></div><button onpointerdown="moveKing(0,-15)" class="bg-slate-700 p-2 rounded font-bold">⬆️</button><div></div>
+                <button onpointerdown="moveKing(-15,0)" class="bg-slate-700 p-2 rounded font-bold">⬅️</button>
+                <button onpointerdown="kingAttack()" class="bg-red-600 p-2 rounded font-bold">⚔️</button>
+                <button onpointerdown="moveKing(15,0)" class="bg-slate-700 p-2 rounded font-bold">➡️</button>
+                <div></div><button onpointerdown="moveKing(0,15)" class="bg-slate-700 p-2 rounded font-bold">⬇️</button><div></div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="recruit()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold text-sm">🛡️ 徵兵 ($30)</button>
+                <button onclick="setOrder('follow')" class="order-btn px-3 py-2 bg-blue-600 rounded-lg font-bold text-sm" data-o="follow">🚩 跟隨國王</button>
+                <button onclick="setOrder('defend')" class="order-btn px-3 py-2 bg-slate-700 rounded-lg font-bold text-sm" data-o="defend">🏰 守城</button>
+                <button onclick="setOrder('patrol')" class="order-btn px-3 py-2 bg-slate-700 rounded-lg font-bold text-sm" data-o="patrol">🧭 巡邏</button>
+                <button onclick="setOrder('charge')" class="order-btn px-3 py-2 bg-slate-700 rounded-lg font-bold text-sm" data-o="charge">🔥 總攻</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('map'), ctx = canvas.getContext('2d');
+        let gold = 150, order = 'follow';
+        const king = { x: 100, y: 180, hp: 200 };
+        const soldiers = [];
+        const enemyKingdoms = [
+            { name: "赤焰王國", x: 700, y: 70, hp: 150, color: '#ef4444' },
+            { name: "寒霜帝國", x: 720, y: 180, hp: 150, color: '#38bdf8' },
+            { name: "暗影公國", x: 700, y: 290, hp: 150, color: '#a855f7' }
+        ];
+        function moveKing(dx, dy) { king.x = Math.max(30, Math.min(770, king.x+dx)); king.y = Math.max(30, Math.min(330, king.y+dy)); }
+        function kingAttack() {
+            enemyKingdoms.forEach(k => { if(k.hp > 0 && Math.hypot(k.x-king.x, k.y-king.y) < 70) k.hp = Math.max(0, k.hp - 25); });
+        }
+        function recruit() {
+            if(gold < 30) return;
+            gold -= 30;
+            soldiers.push({ x: 80 + Math.random()*30, y: 160 + Math.random()*40 });
+        }
+        function setOrder(o) {
+            order = o;
+            document.querySelectorAll('.order-btn').forEach(b => b.className = `order-btn px-3 py-2 rounded-lg font-bold text-sm ${b.dataset.o===o?'bg-blue-600':'bg-slate-700'}`);
+        }
+        setInterval(() => { gold += 5; }, 1000);
+        function loop() {
+            ctx.clearRect(0,0,800,360);
+            // Ally Castle & Auto Arrow Tower
+            ctx.fillStyle = '#3b82f6'; ctx.fillRect(30, 140, 45, 80);
+            // Enemy Kingdoms
+            enemyKingdoms.forEach(k => {
+                if(k.hp <= 0) return;
+                ctx.fillStyle = k.color; ctx.fillRect(k.x-20, k.y-20, 40, 40);
+                ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.fillText(`${k.name} (${k.hp})`, k.x-35, k.y-26);
+            });
+            // Soldiers AI
+            soldiers.forEach((s, idx) => {
+                let tx = king.x - 25, ty = king.y + (idx%5 - 2)*15;
+                if(order === 'defend') { tx = 110; ty = 120 + (idx%6)*20; }
+                else if(order === 'patrol') { tx = 350 + Math.sin(Date.now()*0.002 + idx)*80; ty = 180 + Math.cos(Date.now()*0.002 + idx)*100; }
+                else if(order === 'charge') {
+                    const target = enemyKingdoms.find(k => k.hp > 0);
+                    if(target) { tx = target.x; ty = target.y; if(Math.hypot(tx-s.x, ty-s.y)<30) target.hp = Math.max(0, target.hp - 0.15); }
+                }
+                s.x += (tx - s.x) * 0.04; s.y += (ty - s.y) * 0.04;
+                ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI*2); ctx.fill();
+            });
+            // King
+            ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(king.x, king.y, 12, 0, Math.PI*2); ctx.fill();
+            document.getElementById('gold').textContent = gold;
+            document.getElementById('army-cnt').textContent = soldiers.length;
+            document.getElementById('enemy-bases').textContent = enemyKingdoms.filter(k=>k.hp>0).length;
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三國無雙：群雄逐鹿</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-950 text-white min-h-screen flex flex-col items-center justify-center p-3 select-none">
+    <div class="max-w-4xl w-full bg-stone-900 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+            <h1 class="text-xl font-black text-amber-400">🐉 三國無雙：群雄逐鹿</h1>
+            <div class="flex items-center gap-2 text-xs font-bold">
+                <span>主將: <select id="main-gen" class="bg-stone-800 border border-amber-400 rounded px-2 py-1"></select></span>
+                <span>副將: <select id="sub-gen" class="bg-stone-800 border border-cyan-400 rounded px-2 py-1"></select></span>
+                <button onclick="swapGeneral()" class="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded font-black">🔄 一鍵無縫換將</button>
+            </div>
+        </div>
+        <canvas id="field" width="800" height="350" class="w-full bg-stone-800 rounded-xl border border-stone-700 mb-3"></canvas>
+        <div class="flex flex-wrap justify-between items-center gap-2">
+            <div class="flex gap-2">
+                <button onpointerdown="moveHero(-25,0)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬅️</button>
+                <button onpointerdown="moveHero(0,-25)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬆️</button>
+                <button onpointerdown="moveHero(0,25)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬇️</button>
+                <button onpointerdown="moveHero(25,0)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">➡️</button>
+                <button onclick="musouSlash()" class="px-5 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-black">🔥 無雙亂舞</button>
+            </div>
+            <div class="flex flex-wrap gap-1.5 text-xs font-bold">
+                <button onclick="setFormation('wedge')" class="f-btn px-3 py-2 bg-amber-600 rounded" data-f="wedge">鋒矢陣</button>
+                <button onclick="setFormation('shield')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="shield">玄襄盾陣</button>
+                <button onclick="setFormation('wing')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="wing">鶴翼包抄</button>
+                <button onclick="setFormation('charge')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="charge">全軍突擊</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const generals = [
+            { name: "趙雲 (槍兵)", color: "#38bdf8", atk: 45 },
+            { name: "關羽 (重騎)", color: "#22c55e", atk: 55 },
+            { name: "呂布 (無雙)", color: "#ef4444", atk: 70 },
+            { name: "諸葛亮 (軍師)", color: "#a855f7", atk: 40 },
+            { name: "周瑜 (弓弩)", color: "#f97316", atk: 48 },
+            { name: "夏侯惇 (虎豹)", color: "#3b82f6", atk: 50 }
+        ];
+        const mSel = document.getElementById('main-gen'), sSel = document.getElementById('sub-gen');
+        generals.forEach((g, i) => { mSel.add(new Option(g.name, i)); sSel.add(new Option(g.name, i)); });
+        sSel.selectedIndex = 1;
+
+        const canvas = document.getElementById('field'), ctx = canvas.getContext('2d');
+        const hero = { x: 160, y: 175 };
+        const guards = Array.from({length: 12}, (_, i) => ({ x: 120, y: 100 + i*14 }));
+        const enemies = Array.from({length: 25}, () => ({ x: 450 + Math.random()*320, y: 30 + Math.random()*290, hp: 50 }));
+        let formation = 'wedge', slashFx = 0;
+
+        function swapGeneral() {
+            const tmp = mSel.selectedIndex; mSel.selectedIndex = sSel.selectedIndex; sSel.selectedIndex = tmp;
+            slashFx = 12;
+        }
+        function moveHero(dx, dy) { hero.x = Math.max(30, Math.min(770, hero.x+dx)); hero.y = Math.max(30, Math.min(320, hero.y+dy)); }
+        function musouSlash() {
+            slashFx = 15;
+            const g = generals[mSel.selectedIndex];
+            enemies.forEach(e => { if(Math.hypot(e.x-hero.x, e.y-hero.y) < 120) e.hp -= g.atk; });
+        }
+        function setFormation(f) {
+            formation = f;
+            document.querySelectorAll('.f-btn').forEach(b => b.className = `f-btn px-3 py-2 rounded ${b.dataset.f===f?'bg-amber-600':'bg-stone-700'}`);
+        }
+        function loop() {
+            ctx.clearRect(0,0,800,350);
+            const g = generals[mSel.selectedIndex];
+            // Update & Respawn Enemies
+            enemies.forEach(e => {
+                if(e.hp <= 0) { e.x = 760; e.y = 30 + Math.random()*290; e.hp = 50; }
+                e.x -= 0.4; if(e.x < 20) e.x = 780;
+                ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(e.x, e.y, 7, 0, Math.PI*2); ctx.fill();
+            });
+            // Guards Formation
+            guards.forEach((s, idx) => {
+                let tx = hero.x - 30, ty = hero.y + (idx - 5.5)*16;
+                if(formation === 'shield') { tx = hero.x + 35; }
+                else if(formation === 'wing') { tx = hero.x + Math.abs(idx-5.5)*8; }
+                else if(formation === 'charge') { tx = enemies[idx % enemies.length].x; ty = enemies[idx % enemies.length].y; }
+                s.x += (tx - s.x)*0.06; s.y += (ty - s.y)*0.06;
+                enemies.forEach(e => { if(Math.hypot(e.x-s.x, e.y-s.y)<18) e.hp -= 0.5; });
+                ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI*2); ctx.fill();
+            });
+            // Hero
+            ctx.fillStyle = g.color; ctx.beginPath(); ctx.arc(hero.x, hero.y, 14, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.fillText(g.name, hero.x-28, hero.y-20);
+            if(slashFx > 0) {
+                ctx.strokeStyle = g.color; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(hero.x, hero.y, (16-slashFx)*8, 0, Math.PI*2); ctx.stroke();
+                slashFx--;
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

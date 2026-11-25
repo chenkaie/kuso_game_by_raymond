@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星界召喚：幻境卡牌</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .holo-card { background: linear-gradient(135deg, #1e1b4b, #312e81, #4c1d95); transition: transform 0.2s; }
+        .holo-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 0 20px rgba(168,85,247,0.7); }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen p-4 select-none">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex flex-wrap justify-between items-center bg-slate-900 p-4 rounded-2xl border border-purple-500/40 mb-4">
+            <h1 class="text-2xl font-black text-purple-300">✨ 星界召喚：幻境卡牌</h1>
+            <div class="flex items-center gap-4 text-sm font-bold">
+                <span class="text-cyan-300">💎 星鑽: <span id="gems">1600</span></span>
+                <span class="text-amber-300">SSR保底: <span id="pity-ssr">0</span>/30</span>
+                <span class="text-rose-400">UR保底: <span id="pity-ur">0</span>/80</span>
+                <button onclick="freeSupply()" class="px-3 py-1.5 bg-emerald-600 rounded-lg">🎁 免費補給箱</button>
+            </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-slate-900 p-4 rounded-2xl border border-indigo-500/30">
+                <h2 class="font-bold text-indigo-300 mb-3">🔮 星界召喚祭壇</h2>
+                <div class="flex gap-3 mb-4">
+                    <button onclick="summon(1)" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold">單抽 (160💎)</button>
+                    <button onclick="summon(10)" class="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-black">十連召喚 (1600💎)</button>
+                </div>
+                <div id="pull-results" class="grid grid-cols-5 gap-2 min-h-[110px] bg-slate-950 p-3 rounded-xl"></div>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-2xl border border-rose-500/30">
+                <h2 class="font-bold text-rose-300 mb-2">⚔️ 屬性相剋回合制關卡 (水>火>風>水)</h2>
+                <p class="text-xs text-slate-400 mb-3">當前關卡首領：<span id="boss-info" class="text-amber-300 font-bold">熔岩巨龍 (🔥火屬性 | HP 300)</span></p>
+                <button onclick="battleStage()" class="w-full py-3 bg-rose-600 hover:bg-rose-500 rounded-xl font-black mb-2">出戰挑戰關卡 (+320💎)</button>
+                <div id="battle-log" class="text-xs text-emerald-300 bg-slate-950 p-3 rounded-xl min-h-[60px]">點擊出戰，系統將自動派出最強英雄並計算屬性剋制加成！</div>
+            </div>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
+            <h2 class="font-bold text-amber-300 mb-3">🃏 英雄圖鑑與升星系統（重複獲得自動升星強化）</h2>
+            <div id="collection" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5"></div>
+        </div>
+    </div>
+    <script>
+        const heroPool = [
+            { name: "星輝聖女", rarity: "UR", elem: "光", atk: 120 }, { name: "深淵龍皇", rarity: "UR", elem: "暗", atk: 125 },
+            { name: "蒼藍劍聖", rarity: "SSR", elem: "水", atk: 85 }, { name: "熾焰魔女", rarity: "SSR", elem: "火", atk: 88 },
+            { name: "疾風遊俠", rarity: "SSR", elem: "風", atk: 82 }, { name: "聖殿騎士", rarity: "SR", elem: "光", atk: 55 },
+            { name: "潮汐祭司", rarity: "SR", elem: "水", atk: 50 }, { name: "烈火戰士", rarity: "R", elem: "火", atk: 35 }
+        ];
+        let gems = 1600, pitySSR = 0, pityUR = 0, owned = {};
+        function freeSupply() { gems += 800; updateUI(); }
+        function summon(times) {
+            if(gems < times * 160) return;
+            gems -= times * 160;
+            const res = [];
+            for(let i=0; i<times; i++) {
+                pitySSR++; pityUR++;
+                let rarity = "R";
+                if(pityUR >= 80 || Math.random() < 0.03) { rarity = "UR"; pityUR = 0; pitySSR = 0; }
+                else if(pitySSR >= 30 || Math.random() < 0.12) { rarity = "SSR"; pitySSR = 0; }
+                else if(Math.random() < 0.45) rarity = "SR";
+                const pool = heroPool.filter(h => h.rarity === rarity);
+                const hero = pool[Math.floor(Math.random()*pool.length)];
+                if(!owned[hero.name]) owned[hero.name] = { ...hero, stars: 1 };
+                else { owned[hero.name].stars++; owned[hero.name].atk += 15; }
+                res.push(hero);
+            }
+            document.getElementById('pull-results').innerHTML = res.map(h => `<div class="holo-card p-2 rounded-lg border border-purple-400 text-center text-xs"><div class="font-black text-amber-300">${h.rarity}</div><div class="font-bold truncate">${h.name}</div><div class="text-[10px] text-cyan-300">${h.elem}</div></div>`).join('');
+            updateUI();
+        }
+        function battleStage() {
+            const list = Object.values(owned);
+            if(list.length === 0) { document.getElementById('battle-log').textContent = "請先召喚至少一位英雄！"; return; }
+            const best = list.sort((a,b)=>b.atk-a.atk)[0];
+            const bonus = best.elem === "水" ? 1.5 : 1.0;
+            const dmg = Math.floor(best.atk * bonus * 3);
+            if(dmg >= 200) {
+                gems += 320;
+                document.getElementById('battle-log').textContent = `⚔️ 派出【${best.name}】(${best.elem})，觸發 ${bonus}x 屬性倍率造成 ${dmg} 傷害！挑戰成功獲得 320 星鑽！`;
+            } else {
+                document.getElementById('battle-log').textContent = `💥 【${best.name}】造成 ${dmg} 傷害，首領殘血逃脫，請召喚或升星英雄後再戰！`;
+            }
+            updateUI();
+        }
+        function updateUI() {
+            document.getElementById('gems').textContent = gems;
+            document.getElementById('pity-ssr').textContent = pitySSR;
+            document.getElementById('pity-ur').textContent = pityUR;
+            document.getElementById('collection').innerHTML = Object.values(owned).map(h => `<div class="holo-card p-3 rounded-xl border border-amber-400/50 text-center"><div class="text-xs font-black text-amber-300">${h.rarity} ★${h.stars}</div><div class="font-bold text-sm my-1">${h.name}</div><div class="text-xs text-cyan-300">${h.elem} | ATK ${h.atk}</div></div>`).join('');
+        }
+        updateUI();
+    </script>
+</body>
+</html>

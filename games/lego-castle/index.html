@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 樂高城堡拉鋸戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body class="m-0 overflow-hidden bg-sky-900 text-white select-none">
+    <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap justify-between items-center bg-black/70 p-3 rounded-xl border border-yellow-400">
+        <div class="font-black text-yellow-400">🧱 3D 樂高城堡拉鋸戰 | 關卡 <span id="stage">1</span> <span id="boss-alert" class="text-rose-400"></span></div>
+        <div class="flex gap-4 text-sm font-bold">
+            <span>💰 金庫: $<span id="gold">100</span></span>
+            <span>🏰 我方塔: <span id="ally-hp">500</span></span>
+            <span>🖤 敵方塔: <span id="enemy-hp">500</span></span>
+        </div>
+    </div>
+    <div class="absolute bottom-4 left-3 right-3 z-10 flex flex-wrap justify-center gap-2">
+        <button onclick="spawnUnit('swat', 30, 0x1e3a8a, 40, 10)" class="px-3 py-2 bg-blue-700 rounded-lg font-bold text-sm">👮 SWAT ($30)</button>
+        <button onclick="spawnUnit('clone', 50, 0xf8fafc, 60, 15)" class="px-3 py-2 bg-slate-200 text-slate-900 rounded-lg font-bold text-sm">🪖 複製人 ($50)</button>
+        <button onclick="spawnUnit('hulk', 90, 0x16a34a, 160, 28)" class="px-3 py-2 bg-green-600 rounded-lg font-bold text-sm">💪 綠巨人 ($90)</button>
+        <button onclick="spawnUnit('ninja', 70, 0x111827, 70, 35)" class="px-3 py-2 bg-gray-800 border border-gray-500 rounded-lg font-bold text-sm">🥷 忍者 ($70)</button>
+        <button onclick="fireball()" class="px-3 py-2 bg-red-600 rounded-lg font-black text-sm">🔥 巨大紅樂高火球 ($80)</button>
+        <button onclick="upgradeVault()" class="px-3 py-2 bg-amber-500 text-black rounded-lg font-black text-sm">🏦 升級金庫 ($60)</button>
+    </div>
+    <canvas id="c" class="block w-screen h-screen"></canvas>
+    <script type="module">
+        import * as THREE from 'three';
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0ea5e9);
+        const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 100);
+        camera.position.set(0, 7, 16); camera.lookAt(0, 1, 0);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+        renderer.setSize(innerWidth, innerHeight);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x334155, 1.2));
+        const ground = new THREE.Mesh(new THREE.BoxGeometry(30, 0.5, 6), new THREE.MeshLambertMaterial({ color: 0x22c55e }));
+        scene.add(ground);
+
+        function makeLego(color, scale=1) {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.45), new THREE.MeshLambertMaterial({ color }));
+            body.position.y = 0.7;
+            const head = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.4, 16), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+            head.position.y = 1.4;
+            g.add(body, head); g.scale.setScalar(scale);
+            return g;
+        }
+        const allyBase = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 3), new THREE.MeshLambertMaterial({ color: 0x2563eb }));
+        allyBase.position.set(-11, 2, 0); scene.add(allyBase);
+        const enemyBase = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 3), new THREE.MeshLambertMaterial({ color: 0x18181b }));
+        enemyBase.position.set(11, 2, 0); scene.add(enemyBase);
+
+        let stage = 1, gold = 100, income = 8, allyHp = 500, enemyHp = 500;
+        const allies = [], enemies = [];
+
+        window.spawnUnit = (type, cost, color, hp, atk) => {
+            if(gold < cost) return;
+            gold -= cost;
+            const mesh = makeLego(color, type==='hulk'?1.3:1);
+            mesh.position.set(-9.5, 0.25, (Math.random()-0.5)*2);
+            scene.add(mesh);
+            allies.push({ mesh, hp, atk, speed: type==='ninja'?0.07:0.04 });
+        };
+        window.fireball = () => {
+            if(gold < 80) return;
+            gold -= 80;
+            enemies.forEach(e => e.hp -= 120);
+        };
+        window.upgradeVault = () => {
+            if(gold < 60) return;
+            gold -= 60; income += 5;
+        };
+        function spawnEnemyWave() {
+            const isBoss = (stage % 3 === 0);
+            document.getElementById('boss-alert').textContent = isBoss ? "⚠️ 10倍血量超大黑武士魔王降臨！" : "";
+            const mesh = makeLego(0x09090b, isBoss ? 2.2 : 1);
+            mesh.position.set(9.5, 0.25, (Math.random()-0.5)*2);
+            scene.add(mesh);
+            enemies.push({ mesh, hp: isBoss ? 800 : 60 + stage*15, atk: isBoss ? 30 : 12, speed: 0.035 });
+        }
+        setInterval(() => { gold += income; }, 1000);
+        setInterval(() => { if(enemies.length < 6) spawnEnemyWave(); }, 3500);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            allies.forEach((a, i) => {
+                const target = enemies[0];
+                if(target && Math.abs(target.mesh.position.x - a.mesh.position.x) < 1.2) {
+                    target.hp -= a.atk * 0.03;
+                } else if(a.mesh.position.x < 9.5) {
+                    a.mesh.position.x += a.speed;
+                } else {
+                    enemyHp -= a.atk * 0.03;
+                }
+            });
+            enemies.forEach((e, i) => {
+                const target = allies[0];
+                if(target && Math.abs(target.mesh.position.x - e.mesh.position.x) < 1.2) {
+                    target.hp -= e.atk * 0.03;
+                } else if(e.mesh.position.x > -9.5) {
+                    e.mesh.position.x -= e.speed;
+                } else {
+                    allyHp -= e.atk * 0.03;
+                }
+            });
+            for(let i=allies.length-1;i>=0;i--) if(allies[i].hp<=0){ scene.remove(allies[i].mesh); allies.splice(i,1); }
+            for(let i=enemies.length-1;i>=0;i--) if(enemies[i].hp<=0){ scene.remove(enemies[i].mesh); enemies.splice(i,1); gold+=25; }
+            if(enemyHp <= 0) { stage++; enemyHp = 500 + stage*100; allyHp = 500; spawnEnemyWave(); }
+            if(allyHp <= 0) { allyHp = 500; enemyHp = 500; }
+            document.getElementById('stage').textContent = stage;
+            document.getElementById('gold').textContent = Math.floor(gold);
+            document.getElementById('ally-hp').textContent = Math.max(0, Math.floor(allyHp));
+            document.getElementById('enemy-hp').textContent = Math.max(0, Math.floor(enemyHp));
+            renderer.render(scene, camera);
+        }
+        spawnEnemyWave(); animate();
+    </script>
+</body>
+</html>
