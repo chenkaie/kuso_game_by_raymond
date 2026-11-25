@@ -4,6 +4,14 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 
 > 更新日期：2026-11-25。此 repository 為靜態遊戲入口與原始碼收藏。外部 Sites 的原始碼尚未匯入，外部網站的存取權與功能未重新測試。
 
+## 獨立 GitHub Pages 遊戲
+
+| 遊戲 | 最新確認版本 | 類型 | 特色 | 遊玩及原始碼 |
+|---|---|---|---|---|
+| 三國方塊無雙（Three Kingdoms Voxel Warriors） | v2.1 | 3D 動作闖關／方塊建造 | 12 位武將、6 關 Boss、哥吉拉三段變身、三種難度、中英雙語、鍵鼠及觸控 | [立即遊玩](https://chenkaie.github.io/minecraft-sanguo/) · [原始 Repo](https://github.com/chenkaie/minecraft-sanguo) |
+
+此作品已由獨立 Repo 透過 GitHub Pages 發布，Dashboard 連至該 Repo 的最新正式遊戲入口，不複製歷史版本或遊戲本體，以維持單一原始碼來源。遊戲與方塊王國 2P 分別保留，尚無證據顯示為同一作品。版本及特色依 [原始 README](https://github.com/chenkaie/minecraft-sanguo/blob/main/README.md)。
+
 ## 遊戲清單
 
 | 遊戲 | 最近確認更新 | 類型 | 入口／匯入狀態 |
@@ -63,7 +71,7 @@ GitHub Pages 已由使用者設定；部署網址：https://chenkaie.github.io/k
 ## 版本管理
 
 - 每款遊戲使用獨立的 `games/<slug>/index.html` 路徑。
-- 目前有兩款取回的原始 HTML；其餘不是原始碼備份。
+- 目前有兩款取回的原始 HTML，以及一款已獨立維護的 GitHub Pages 遊戲（三國方塊無雙）；外部 Sites 文字備份不是完整遊戲原始碼。
 - 外部 Sites 使用原始網站入口，待取得實際程式碼後再移入。
 - 未確認原始網址或原始碼的遊戲保留清單項目，不建立假遊戲。
 - 此次僅匯入原始 HTML，不修改遊戲內容，也不宣稱已完成瀏覽器遊玩測試。
