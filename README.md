@@ -12,7 +12,7 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 宇宙卡牌大亂鬥 | 2026-11-15 | 卡牌對戰 | [HTML 修正版](games/crossover-cards/index.html) |
 | 畫線交鋒 | 2026-11-09 | 策略對戰 | 待確認原始網址及原始碼 |
 | 星際遠征：銀河飛行員 | 2026-11-07 | 太空飛行 | [原始 Sites（v8）](https://starflight-castle-nov1.chenkaie.chatgpt.site) |
-| 新手射擊訓練場 | 2026-11-07 | 射擊 | [原始 Sites（v9）](https://easy-target-arena-kent.chenkaie.chatgpt.site) |
+| 新手射擊訓練場 | 2026-11-07 | 射擊 | [原始 Sites（v10）](https://easy-target-arena-kent.chenkaie.chatgpt.site) |
 | 水果貪吃蛇 | 2026-11-01 | 休閒 | [原始 Sites（v2）](https://fruit-snake-garden-kent-1101.chenkaie.chatgpt.site) |
 | 光劍合成大戰 | 2026-10-31 | 動作格鬥 | [HTML 修復版](games/lightsaber-fusion/index.html) |
 | 雙城爭霸：未來軍團 | 2026-10-18 | 城堡攻防 | [原始 Sites（v1）](https://castle-future-legion.chenkaie.chatgpt.site) |
@@ -41,6 +41,10 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 太空戰機 | 2026-09-06 | 是否為其他太空射擊遊戲前身待核對 |
 
 以上四項僅為可確認的製作對話紀錄，尚無可核對的原始碼或遊玩網址，不算作已移植遊戲。
+
+## Sites 原始碼移植
+
+已整理 8 款外部 Sites 的最新可取得版本、原始網址及畫面文字：[完整移植清單與驗收標準](docs/sites-migration.md)。其中新手射擊訓練場更新至 Sites v10。Library 目前只提供畫面文字擷取，不能匯出完整原始碼；直接下載網站亦未成功。這八款尚未完成移植。取得實際完整原始碼或靜態建置輸出後，才會改用本站遊戲入口。
 
 ## 長期維護原則
 
