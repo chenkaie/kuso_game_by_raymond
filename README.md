@@ -19,11 +19,40 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 士兵大對決 | 2026-09-15 | 3D 即時戰略 | [原始 Sites（v13）](https://soldier-clash-arena.chenkaie.chatgpt.site) |
 | 霓虹跑酷：天際衝刺 | 2026-09-10 | 3D 跑酷 | [原始 Sites（v1）](https://neon-rooftop-runner.chenkaie.chatgpt.site) |
 
+## 補充：67 Project 與獨立遊戲
+
+### 已核對原始碼
+
+`/67` 中的四個 HTML 是同一款第一人稱光劍合成大戰的迭代版本。2026-10-31 的 `光劍合成大戰_修復版.html` 已與本 repo 的 [games/lightsaber-fusion/index.html](games/lightsaber-fusion/index.html) 核對，內容相符；不重複提交前三個舊版。2026-11-01 的操作改善需求尚未取得可確認的新版原始碼。非遊戲 JPEG 不匯入公開 repository。
+
+### 補充遊戲入口
+
+| 遊戲 | 日期 | 狀態 |
+|---|---|---|
+| 劍影對決｜火柴人競技場 | 2026-10-30 | [原始 Sites（v1）](https://stickman-sword-arena-kent.chenkaie.chatgpt.site)，2D 劍術挑戰；不同於第一人稱光劍合成大戰 |
+
+### 67 Project 對話紀錄（待取回原始碼、核對是否重複）
+
+| 遊戲 | 最近確認的需求日期 | 說明 |
+|---|---|---|
+| 寵物／貓咪養成 | 2026-09-08 | 寵物養成的升級版 |
+| 甲蟲對戰擂台 | 2026-09-06 | 甲蟲競技 |
+| 武士對戰遊戲 | 2026-09-06 | 2D 藍色武士對 AI；是否為劍影對決前身待核對 |
+| 太空戰機 | 2026-09-06 | 是否為其他太空射擊遊戲前身待核對 |
+
+以上四項僅為可確認的製作對話紀錄，尚無可核對的原始碼或遊玩網址，不算作已移植遊戲。
+
+## 長期維護原則
+
+最終建議是將所有遊戲完整移植至 GitHub，讓每款遊戲都能獨立運作，不再依賴 ChatGPT Sites。這樣未來就能透過 Git 進行版本管理、功能更新及長期維護。
+
+有新的遊戲版本時，優先取回實際原始碼、確認能獨立運作、更新同一個遊戲目錄及首頁，不另建重複的舊版入口。
+
 ## GitHub Pages
 
 在 [Settings → Pages](https://github.com/chenkaie/kuso_game_by_raymond/settings/pages)，將 Source 設為 **Deploy from a branch**，Branch 選 **main / (root)**，儲存。
 
-部署完成後預期網址：https://chenkaie.github.io/kuso_game_by_raymond/
+GitHub Pages 已由使用者設定；部署網址：https://chenkaie.github.io/kuso_game_by_raymond/
 
 本網站不需要後端或編譯。可直接開啟根目錄 `index.html`，或使用 GitHub Pages。
 
