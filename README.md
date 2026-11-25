@@ -1,4 +1,4 @@
-# 雷門的糞 Game 大集合 | Raymond's Game Collection 🎮
+# 雷門的糞 Game 大集合 | Raymond's Kuso Game Collection 🎮
 
 Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 
