@@ -2,99 +2,944 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三國無雙：群雄逐鹿</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>三國無雙：群雄逐鹿（平板／電腦雙棲完整版）</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background: #140f0c;
+            color: #f5e6c8;
+            font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            width: 100vw;
+            height: 100vh;
+        }
+        #gameCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 1;
+            touch-action: none;
+        }
+        /* 點將台介面（高層級確保平板 100% 可點擊） */
+        #roster-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: radial-gradient(circle at top, #2c1810 0%, #120b08 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            overflow-y: auto;
+        }
+        .header-title {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .header-title h1 {
+            font-size: clamp(22px, 4vw, 34px);
+            color: #fbbf24;
+            text-shadow: 0 2px 10px rgba(251, 191, 36, 0.45);
+            letter-spacing: 3px;
+        }
+        .header-title p {
+            font-size: 13px;
+            color: #d6c29f;
+            margin-top: 2px;
+        }
+        .slots-bar {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 760px;
+            justify-content: center;
+            margin: 6px 0;
+        }
+        .slot-box {
+            flex: 1;
+            background: rgba(38, 22, 14, 0.92);
+            border: 2px solid #b45309;
+            border-radius: 12px;
+            padding: 10px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .slot-box.sub { border-color: #0284c7; }
+        .slot-box:active { transform: scale(0.97); }
+        .slot-label {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 99px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .slot-box.main .slot-label { background: #d97706; color: #fff; }
+        .slot-box.sub .slot-label { background: #0284c7; color: #fff; }
+        .slot-name { font-size: 17px; font-weight: 900; color: #fff; }
+        .slot-desc { font-size: 11px; color: #cbd5e1; margin-top: 2px; }
+
+        .generals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 820px;
+            margin: 6px 0;
+        }
+        @media (max-width: 600px) {
+            .generals-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .gen-card {
+            background: linear-gradient(145deg, #291810, #1c100b);
+            border: 2px solid #573826;
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s;
+        }
+        .gen-card:active { transform: scale(0.96); }
+        .gen-card.selected-main { border-color: #fbbf24; box-shadow: 0 0 14px rgba(251, 191, 36, 0.5); }
+        .gen-card.selected-sub { border-color: #38bdf8; box-shadow: 0 0 14px rgba(56, 189, 248, 0.5); }
+        .gen-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+        .badge-main { background: #f59e0b; color: #000; }
+        .badge-sub { background: #38bdf8; color: #000; }
+        .gen-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .gen-icon { font-size: 26px; }
+        .gen-title { font-size: 16px; font-weight: 900; color: #fef3c7; }
+        .gen-role { font-size: 11px; color: #fbbf24; }
+        .gen-skill { font-size: 11px; color: #cbd5e1; line-height: 1.35; }
+
+        .action-footer {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 760px;
+            margin-top: 6px;
+        }
+        .btn-random {
+            padding: 14px 18px;
+            background: #334155;
+            color: #fff;
+            border: 2px solid #64748b;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-start {
+            flex: 1;
+            padding: 14px 20px;
+            background: linear-gradient(90deg, #dc2626, #d97706);
+            color: #fff;
+            border: 2px solid #fde047;
+            border-radius: 12px;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(220, 38, 38, 0.5);
+        }
+        .btn-start:active, .btn-random:active { transform: scale(0.97); }
+
+        /* 戰鬥 HUD */
+        #hud-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+        }
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .status-card {
+            background: rgba(20, 14, 10, 0.85);
+            border: 1.5px solid #b45309;
+            border-radius: 12px;
+            padding: 8px 12px;
+            min-width: 210px;
+        }
+        .hp-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: #292524;
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+        .hp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #84cc16);
+            transition: width 0.15s;
+        }
+        .musou-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            transition: width 0.15s;
+        }
+        .stage-box {
+            background: rgba(20, 14, 10, 0.85);
+            border: 1.5px solid #ca8a04;
+            border-radius: 12px;
+            padding: 8px 14px;
+            text-align: center;
+        }
+        .hud-controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+        .mini-btn {
+            background: rgba(30, 27, 24, 0.9);
+            color: #fde68a;
+            border: 1px solid #92400e;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .mini-btn.active {
+            background: #b45309;
+            color: #fff;
+            border-color: #fde047;
+        }
+
+        /* 底部觸控區（平板專用大按鈕） */
+        .hud-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: auto;
+            padding-bottom: 4px;
+        }
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            grid-template-rows: repeat(3, 52px);
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 8px;
+            border-radius: 18px;
+        }
+        .dpad button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .dpad button:active { background: rgba(251, 191, 36, 0.65); }
+
+        .combat-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .top-action-row {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-swap {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #0284c7, #1d4ed8);
+            border: 2.5px solid #7dd3fc;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-swap:active { transform: scale(0.94); }
+        .btn-musou {
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #d97706, #dc2626);
+            border: 2.5px solid #fde047;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.6);
+        }
+        .btn-musou:active { transform: scale(0.94); }
+        .btn-attack {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ef4444 0%, #991b1b 100%);
+            border: 3px solid #fde047;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.65);
+        }
+        .btn-attack:active { transform: scale(0.92); }
+    </style>
 </head>
-<body class="bg-stone-950 text-white min-h-screen flex flex-col items-center justify-center p-3 select-none">
-    <div class="max-w-4xl w-full bg-stone-900 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl">
-        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-            <h1 class="text-xl font-black text-amber-400">🐉 三國無雙：群雄逐鹿</h1>
-            <div class="flex items-center gap-2 text-xs font-bold">
-                <span>主將: <select id="main-gen" class="bg-stone-800 border border-amber-400 rounded px-2 py-1"></select></span>
-                <span>副將: <select id="sub-gen" class="bg-stone-800 border border-cyan-400 rounded px-2 py-1"></select></span>
-                <button onclick="swapGeneral()" class="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded font-black">🔄 一鍵無縫換將</button>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- 點將台畫面 -->
+    <div id="roster-screen">
+        <div class="header-title">
+            <h1>🐉 三國無雙：群雄逐鹿</h1>
+            <p>點選下方名將指派【主將】與【副將】，進入戰場後可一鍵無縫切換！</p>
+        </div>
+
+        <div class="slots-bar">
+            <div class="slot-box main" id="slot-main">
+                <span class="slot-label">主將（先鋒出戰）</span>
+                <div class="slot-name" id="slot-main-name">⚔️ 關羽</div>
+                <div class="slot-desc" id="slot-main-desc">青龍偃月・範圍斬擊</div>
+            </div>
+            <div class="slot-box sub" id="slot-sub">
+                <span class="slot-label">副將（隨時切換）</span>
+                <div class="slot-name" id="slot-sub-name">⚡ 趙雲</div>
+                <div class="slot-desc" id="slot-sub-desc">龍膽亮銀・高速突刺</div>
             </div>
         </div>
-        <canvas id="field" width="800" height="350" class="w-full bg-stone-800 rounded-xl border border-stone-700 mb-3"></canvas>
-        <div class="flex flex-wrap justify-between items-center gap-2">
-            <div class="flex gap-2">
-                <button onpointerdown="moveHero(-25,0)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬅️</button>
-                <button onpointerdown="moveHero(0,-25)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬆️</button>
-                <button onpointerdown="moveHero(0,25)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">⬇️</button>
-                <button onpointerdown="moveHero(25,0)" class="px-4 py-3 bg-stone-700 rounded-xl font-bold">➡️</button>
-                <button onclick="musouSlash()" class="px-5 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-black">🔥 無雙亂舞</button>
+
+        <div class="generals-grid" id="generals-grid"></div>
+
+        <div class="action-footer">
+            <button type="button" class="btn-random" id="btn-random">🎲 隨機雙將</button>
+            <button type="button" class="btn-start" id="btn-start">⚔️ 開始征戰</button>
+        </div>
+    </div>
+
+    <!-- 戰鬥介面 -->
+    <div id="hud-layer">
+        <div class="hud-top">
+            <div class="status-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong id="hud-active-name" style="color:#fbbf24;font-size:15px;">⚔️ 關羽 (主將)</strong>
+                    <span id="hud-hp-txt" style="font-size:12px;">300/300</span>
+                </div>
+                <div class="hp-bar-bg"><div class="hp-bar-fill" id="hud-hp-bar" style="width:100%;"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:#fcd34d;">
+                    <span>🔥 無雙值</span>
+                    <span id="hud-musou-txt">100%</span>
+                </div>
+                <div class="hp-bar-bg" style="height:7px;"><div class="musou-bar-fill" id="hud-musou-bar" style="width:100%;"></div></div>
             </div>
-            <div class="flex flex-wrap gap-1.5 text-xs font-bold">
-                <button onclick="setFormation('wedge')" class="f-btn px-3 py-2 bg-amber-600 rounded" data-f="wedge">鋒矢陣</button>
-                <button onclick="setFormation('shield')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="shield">玄襄盾陣</button>
-                <button onclick="setFormation('wing')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="wing">鶴翼包抄</button>
-                <button onclick="setFormation('charge')" class="f-btn px-3 py-2 bg-stone-700 rounded" data-f="charge">全軍突擊</button>
+
+            <div class="stage-box">
+                <div id="hud-stage" style="font-weight:900;color:#fbbf24;font-size:15px;">第一關：黃巾之亂</div>
+                <div id="hud-kills" style="font-size:12px;color:#e7e5e4;margin-top:2px;">擊破敵軍：0 / 25</div>
+            </div>
+
+            <div class="hud-controls-top">
+                <button type="button" class="mini-btn active" data-form="guard">🛡️ 護衛</button>
+                <button type="button" class="mini-btn" data-form="wedge">🔺 鋒矢</button>
+                <button type="button" class="mini-btn" data-form="circle">⭕ 圓陣</button>
+                <button type="button" class="mini-btn" data-form="scatter">💥 突擊</button>
+                <button type="button" class="mini-btn" id="btn-recruit">➕ 徵兵</button>
+                <button type="button" class="mini-btn" id="btn-back-roster">🏯 回點將台</button>
+            </div>
+        </div>
+
+        <div class="hud-bottom">
+            <div class="dpad">
+                <div></div>
+                <button type="button" id="pad-up">⬆️</button>
+                <div></div>
+                <button type="button" id="pad-left">⬅️</button>
+                <div></div>
+                <button type="button" id="pad-right">➡️</button>
+                <div></div>
+                <button type="button" id="pad-down">⬇️</button>
+                <div></div>
+            </div>
+
+            <div class="combat-actions">
+                <div class="top-action-row">
+                    <button type="button" class="btn-swap" id="btn-swap">
+                        🔄 換將：<span id="swap-target-label">趙雲</span>
+                    </button>
+                    <button type="button" class="btn-musou" id="btn-musou">
+                        🔥 無雙技 (E)
+                    </button>
+                </div>
+                <button type="button" class="btn-attack" id="btn-attack">⚔️ 斬擊</button>
             </div>
         </div>
     </div>
+
     <script>
-        const generals = [
-            { name: "趙雲 (槍兵)", color: "#38bdf8", atk: 45 },
-            { name: "關羽 (重騎)", color: "#22c55e", atk: 55 },
-            { name: "呂布 (無雙)", color: "#ef4444", atk: 70 },
-            { name: "諸葛亮 (軍師)", color: "#a855f7", atk: 40 },
-            { name: "周瑜 (弓弩)", color: "#f97316", atk: 48 },
-            { name: "夏侯惇 (虎豹)", color: "#3b82f6", atk: 50 }
+        const GENERALS = [
+            { id: 'guanyu', name: '關羽', icon: '⚔️', role: '武聖・青龍偃月', color: '#22c55e', maxHp: 320, atk: 42, speed: 4.2, skillName: '青龍偃月斬', desc: '高血量重擊，無雙技橫掃前方大範圍敵軍' },
+            { id: 'zhaoyun', name: '趙雲', icon: '⚡', role: '常勝・龍膽亮銀', color: '#38bdf8', maxHp: 280, atk: 36, speed: 5.4, skillName: '七進七出龍捲', desc: '高機動連刺，無雙技高速突進清場' },
+            { id: 'zhugeliang', name: '諸葛亮', icon: '🪶', role: '臥龍・八陣神算', color: '#a855f7', maxHp: 240, atk: 34, speed: 4.3, skillName: '八陣天雷轟', desc: '遠程扇氣波，無雙技召喚全屏落雷重創敵軍' },
+            { id: 'lvbu', name: '呂布', icon: '🔥', role: '飛將・方天畫戟', color: '#ef4444', maxHp: 350, atk: 52, speed: 4.8, skillName: '鬼神天下無雙', desc: '全場最高武力，無雙技爆發毀滅性衝擊波' },
+            { id: 'zhangfei', name: '張飛', icon: '🦁', role: '猛將・丈八蛇矛', color: '#f97316', maxHp: 340, atk: 44, speed: 4.1, skillName: '當陽橋怒吼', desc: '霸體重矛橫掃，無雙技震退並重創周圍敵軍' },
+            { id: 'sunshangxiang', name: '孫尚香', icon: '🏹', role: '梟姬・日月神弓', color: '#ec4899', maxHp: 250, atk: 35, speed: 5.2, skillName: '梟姬萬箭齊發', desc: '高速連射穿透箭，無雙技傾瀉漫天箭雨' }
         ];
-        const mSel = document.getElementById('main-gen'), sSel = document.getElementById('sub-gen');
-        generals.forEach((g, i) => { mSel.add(new Option(g.name, i)); sSel.add(new Option(g.name, i)); });
-        sSel.selectedIndex = 1;
 
-        const canvas = document.getElementById('field'), ctx = canvas.getContext('2d');
-        const hero = { x: 160, y: 175 };
-        const guards = Array.from({length: 12}, (_, i) => ({ x: 120, y: 100 + i*14 }));
-        const enemies = Array.from({length: 25}, () => ({ x: 450 + Math.random()*320, y: 30 + Math.random()*290, hp: 50 }));
-        let formation = 'wedge', slashFx = 0;
+        const STAGES = [
+            { name: '第一關：黃巾之亂', target: 20, boss: '張角' },
+            { name: '第二關：虎牢關前哨', target: 28, boss: '華雄' },
+            { name: '第三關：官渡奇襲戰', target: 35, boss: '顏良' },
+            { name: '第四關：赤壁火攻陣', target: 42, boss: '曹仁' },
+            { name: '第五關：五丈原決戰', target: 50, boss: '司馬懿' }
+        ];
 
-        function swapGeneral() {
-            const tmp = mSel.selectedIndex; mSel.selectedIndex = sSel.selectedIndex; sSel.selectedIndex = tmp;
-            slashFx = 12;
+        const SOLDIER_TYPES = [
+            { name: '長槍兵', color: '#60a5fa', range: 28, atk: 8 },
+            { name: '連弩手', color: '#34d399', range: 170, atk: 7 },
+            { name: '西涼鐵騎', color: '#fbbf24', range: 34, atk: 12 },
+            { name: '藤甲盾衛', color: '#a3e635', range: 24, atk: 6 },
+            { name: '烈火軍師', color: '#f472b6', range: 150, atk: 11 },
+            { name: '虎豹刺客', color: '#c084fc', range: 30, atk: 14 }
+        ];
+
+        let mainIdx = 0;
+        let subIdx = 1;
+        let activeSlot = 'main'; // 'main' | 'sub'
+        let heroStates = [];
+        let gameRunning = false;
+        let stageIdx = 0;
+        let kills = 0;
+        let formation = 'guard';
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
-        function moveHero(dx, dy) { hero.x = Math.max(30, Math.min(770, hero.x+dx)); hero.y = Math.max(30, Math.min(320, hero.y+dy)); }
-        function musouSlash() {
-            slashFx = 15;
-            const g = generals[mSel.selectedIndex];
-            enemies.forEach(e => { if(Math.hypot(e.x-hero.x, e.y-hero.y) < 120) e.hp -= g.atk; });
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 音效系統
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type = 'triangle', dur = 0.09) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = type;
+                o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.start();
+                o.stop(audioCtx.currentTime + dur);
+            } catch (e) {}
         }
-        function setFormation(f) {
-            formation = f;
-            document.querySelectorAll('.f-btn').forEach(b => b.className = `f-btn px-3 py-2 rounded ${b.dataset.f===f?'bg-amber-600':'bg-stone-700'}`);
-        }
-        function loop() {
-            ctx.clearRect(0,0,800,350);
-            const g = generals[mSel.selectedIndex];
-            // Update & Respawn Enemies
-            enemies.forEach(e => {
-                if(e.hp <= 0) { e.x = 760; e.y = 30 + Math.random()*290; e.hp = 50; }
-                e.x -= 0.4; if(e.x < 20) e.x = 780;
-                ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(e.x, e.y, 7, 0, Math.PI*2); ctx.fill();
+
+        // 點將台渲染與互動
+        function renderRoster() {
+            const grid = document.getElementById('generals-grid');
+            grid.innerHTML = '';
+            GENERALS.forEach((g, idx) => {
+                const card = document.createElement('div');
+                card.className = 'gen-card' + (idx === mainIdx ? ' selected-main' : (idx === subIdx ? ' selected-sub' : ''));
+                let badge = '';
+                if (idx === mainIdx) badge = '<span class="gen-badge badge-main">主將</span>';
+                else if (idx === subIdx) badge = '<span class="gen-badge badge-sub">副將</span>';
+
+                card.innerHTML = `
+                    ${badge}
+                    <div class="gen-top">
+                        <span class="gen-icon">${g.icon}</span>
+                        <div>
+                            <div class="gen-title">${g.name}</div>
+                            <div class="gen-role">${g.role}</div>
+                        </div>
+                    </div>
+                    <div class="gen-skill">${g.desc}</div>
+                `;
+                card.addEventListener('click', () => {
+                    playTone(520, 'sine', 0.06);
+                    if (idx === mainIdx) return;
+                    if (idx === subIdx) {
+                        const tmp = mainIdx;
+                        mainIdx = subIdx;
+                        subIdx = tmp;
+                    } else {
+                        subIdx = mainIdx;
+                        mainIdx = idx;
+                    }
+                    renderRoster();
+                });
+                grid.appendChild(card);
             });
-            // Guards Formation
-            guards.forEach((s, idx) => {
-                let tx = hero.x - 30, ty = hero.y + (idx - 5.5)*16;
-                if(formation === 'shield') { tx = hero.x + 35; }
-                else if(formation === 'wing') { tx = hero.x + Math.abs(idx-5.5)*8; }
-                else if(formation === 'charge') { tx = enemies[idx % enemies.length].x; ty = enemies[idx % enemies.length].y; }
-                s.x += (tx - s.x)*0.06; s.y += (ty - s.y)*0.06;
-                enemies.forEach(e => { if(Math.hypot(e.x-s.x, e.y-s.y)<18) e.hp -= 0.5; });
-                ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI*2); ctx.fill();
-            });
-            // Hero
-            ctx.fillStyle = g.color; ctx.beginPath(); ctx.arc(hero.x, hero.y, 14, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.fillText(g.name, hero.x-28, hero.y-20);
-            if(slashFx > 0) {
-                ctx.strokeStyle = g.color; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(hero.x, hero.y, (16-slashFx)*8, 0, Math.PI*2); ctx.stroke();
-                slashFx--;
+
+            const m = GENERALS[mainIdx];
+            const s = GENERALS[subIdx];
+            document.getElementById('slot-main-name').textContent = `${m.icon} ${m.name}`;
+            document.getElementById('slot-main-desc').textContent = m.role;
+            document.getElementById('slot-sub-name').textContent = `${s.icon} ${s.name}`;
+            document.getElementById('slot-sub-desc').textContent = s.role;
+        }
+
+        document.getElementById('slot-main').addEventListener('click', () => {
+            const tmp = mainIdx; mainIdx = subIdx; subIdx = tmp; renderRoster();
+        });
+        document.getElementById('slot-sub').addEventListener('click', () => {
+            const tmp = mainIdx; mainIdx = subIdx; subIdx = tmp; renderRoster();
+        });
+        document.getElementById('btn-random').addEventListener('click', () => {
+            playTone(640, 'triangle', 0.08);
+            mainIdx = Math.floor(Math.random() * GENERALS.length);
+            do { subIdx = Math.floor(Math.random() * GENERALS.length); } while (subIdx === mainIdx);
+            renderRoster();
+        });
+
+        // 戰場實體
+        const playerPos = { x: 220, y: 300, facing: 1, invuln: 0, slashTimer: 0 };
+        let soldiers = [];
+        let enemies = [];
+        let effects = [];
+        let projectiles = [];
+
+        function initBattle() {
+            if (subIdx === mainIdx) subIdx = (mainIdx + 1) % GENERALS.length;
+            heroStates = [
+                { ...GENERALS[mainIdx], hp: GENERALS[mainIdx].maxHp, musou: 100, slotLabel: '主將' },
+                { ...GENERALS[subIdx], hp: GENERALS[subIdx].maxHp, musou: 100, slotLabel: '副將' }
+            ];
+            activeSlot = 'main';
+            stageIdx = 0;
+            kills = 0;
+            playerPos.x = Math.min(220, canvas.width * 0.25);
+            playerPos.y = canvas.height * 0.5;
+            soldiers = [];
+            enemies = [];
+            effects = [];
+            projectiles = [];
+
+            for (let i = 0; i < 12; i++) {
+                const st = SOLDIER_TYPES[i % SOLDIER_TYPES.length];
+                soldiers.push({
+                    x: playerPos.x - 40 + (Math.random() - 0.5) * 40,
+                    y: playerPos.y + (Math.random() - 0.5) * 140,
+                    hp: 90,
+                    cooldown: 0,
+                    ...st
+                });
             }
-            requestAnimationFrame(loop);
+            spawnStageWave();
+            updateHUD();
         }
-        loop();
+
+        function spawnStageWave() {
+            const stg = STAGES[stageIdx % STAGES.length];
+            for (let i = 0; i < 14; i++) {
+                enemies.push({
+                    x: canvas.width * 0.65 + Math.random() * (canvas.width * 0.3),
+                    y: 80 + Math.random() * (canvas.height - 160),
+                    hp: 55 + stageIdx * 15,
+                    maxHp: 55 + stageIdx * 15,
+                    atk: 6 + stageIdx * 2,
+                    speed: 1.4 + Math.random() * 0.6,
+                    isBoss: false,
+                    name: '敵軍精銳'
+                });
+            }
+            enemies.push({
+                x: canvas.width * 0.85,
+                y: canvas.height * 0.5,
+                hp: 260 + stageIdx * 80,
+                maxHp: 260 + stageIdx * 80,
+                atk: 16 + stageIdx * 3,
+                speed: 1.2,
+                isBoss: true,
+                name: stg.boss
+            });
+        }
+
+        function getActiveHero() {
+            return activeSlot === 'main' ? heroStates[0] : heroStates[1];
+        }
+        function getStandbyHero() {
+            return activeSlot === 'main' ? heroStates[1] : heroStates[0];
+        }
+
+        function switchGeneral() {
+            if (!gameRunning) return;
+            const standby = getStandbyHero();
+            if (standby.hp <= 0) {
+                effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 35, text: '副將調息中！', color: '#f87171', life: 35 });
+                return;
+            }
+            activeSlot = (activeSlot === 'main') ? 'sub' : 'main';
+            playerPos.invuln = 60;
+            playTone(760, 'sine', 0.14);
+            const cur = getActiveHero();
+            effects.push({ type: 'ring', x: playerPos.x, y: playerPos.y, r: 10, maxR: 85, color: cur.color, life: 22 });
+            effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 40, text: `🔄 ${cur.name} 登場！`, color: '#fde047', life: 45 });
+            updateHUD();
+        }
+
+        function performAttack() {
+            if (!gameRunning) return;
+            const hero = getActiveHero();
+            playerPos.slashTimer = 12;
+            playTone(320, 'sawtooth', 0.08);
+
+            if (hero.id === 'zhugeliang' || hero.id === 'sunshangxiang') {
+                for (let a = -1; a <= 1; a++) {
+                    projectiles.push({
+                        x: playerPos.x + playerPos.facing * 20,
+                        y: playerPos.y,
+                        vx: playerPos.facing * 11,
+                        vy: a * 1.8,
+                        dmg: hero.atk,
+                        color: hero.color,
+                        life: 55
+                    });
+                }
+            } else {
+                effects.push({ type: 'slash', x: playerPos.x + playerPos.facing * 38, y: playerPos.y, facing: playerPos.facing, color: hero.color, life: 12 });
+                enemies.forEach(e => {
+                    const dx = e.x - playerPos.x;
+                    const dy = Math.abs(e.y - playerPos.y);
+                    if (Math.abs(dx) < 95 && dy < 65) {
+                        e.hp -= hero.atk;
+                        e.x += playerPos.facing * 18;
+                        hero.musou = Math.min(100, hero.musou + 8);
+                    }
+                });
+            }
+            updateHUD();
+        }
+
+        function performMusou() {
+            if (!gameRunning) return;
+            const hero = getActiveHero();
+            if (hero.musou < 100) {
+                effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 35, text: '無雙值尚未集滿！', color: '#fca5a5', life: 30 });
+                return;
+            }
+            hero.musou = 0;
+            playerPos.invuln = 70;
+            playTone(920, 'square', 0.25);
+            effects.push({ type: 'ring', x: playerPos.x, y: playerPos.y, r: 15, maxR: 240, color: '#fbbf24', life: 28 });
+            effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 50, text: `🔥 ${hero.skillName}！！`, color: '#fde047', life: 55 });
+            enemies.forEach(e => {
+                if (Math.hypot(e.x - playerPos.x, e.y - playerPos.y) < 260) {
+                    e.hp -= hero.atk * 3.5;
+                }
+            });
+            updateHUD();
+        }
+
+        function updateHUD() {
+            if (!heroStates.length) return;
+            const cur = getActiveHero();
+            const sub = getStandbyHero();
+            const stg = STAGES[stageIdx % STAGES.length];
+            document.getElementById('hud-active-name').textContent = `${cur.icon} ${cur.name} (${cur.slotLabel})`;
+            document.getElementById('hud-hp-txt').textContent = `${Math.max(0, Math.ceil(cur.hp))}/${cur.maxHp}`;
+            document.getElementById('hud-hp-bar').style.width = `${Math.max(0, (cur.hp / cur.maxHp) * 100)}%`;
+            document.getElementById('hud-musou-txt').textContent = `${Math.floor(cur.musou)}%`;
+            document.getElementById('hud-musou-bar').style.width = `${cur.musou}%`;
+            document.getElementById('hud-stage').textContent = stg.name;
+            document.getElementById('hud-kills').textContent = `擊破敵軍：${kills} / ${stg.target}`;
+            document.getElementById('swap-target-label').textContent = `${sub.name} (${Math.max(0, Math.ceil((sub.hp / sub.maxHp) * 100))}%)`;
+        }
+
+        // 輸入控制（鍵盤 + 平板觸控按鈕）
+        const moveInput = { up: false, down: false, left: false, right: false };
+        window.addEventListener('keydown', e => {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveInput.up = true;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveInput.down = true;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveInput.left = true;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveInput.right = true;
+            if (e.code === 'KeyQ') switchGeneral();
+            if (e.code === 'KeyE') performMusou();
+            if (e.code === 'Space') performAttack();
+        });
+        window.addEventListener('keyup', e => {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveInput.up = false;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveInput.down = false;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveInput.left = false;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveInput.right = false;
+        });
+
+        function bindPad(id, dir) {
+            const el = document.getElementById(id);
+            const on = e => { e.preventDefault(); moveInput[dir] = true; };
+            const off = e => { e.preventDefault(); moveInput[dir] = false; };
+            el.addEventListener('pointerdown', on);
+            el.addEventListener('pointerup', off);
+            el.addEventListener('pointerleave', off);
+            el.addEventListener('pointercancel', off);
+        }
+        bindPad('pad-up', 'up');
+        bindPad('pad-down', 'down');
+        bindPad('pad-left', 'left');
+        bindPad('pad-right', 'right');
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            document.getElementById('roster-screen').style.display = 'none';
+            document.getElementById('hud-layer').style.display = 'flex';
+            initBattle();
+            gameRunning = true;
+        });
+
+        document.getElementById('btn-back-roster').addEventListener('click', () => {
+            gameRunning = false;
+            document.getElementById('hud-layer').style.display = 'none';
+            document.getElementById('roster-screen').style.display = 'flex';
+            renderRoster();
+        });
+
+        document.getElementById('btn-swap').addEventListener('click', switchGeneral);
+        document.getElementById('btn-musou').addEventListener('click', performMusou);
+        document.getElementById('btn-attack').addEventListener('click', performAttack);
+
+        document.getElementById('btn-recruit').addEventListener('click', () => {
+            if (!gameRunning || soldiers.length >= 24) return;
+            const st = SOLDIER_TYPES[soldiers.length % SOLDIER_TYPES.length];
+            soldiers.push({
+                x: playerPos.x - 30,
+                y: playerPos.y + (Math.random() - 0.5) * 80,
+                hp: 90,
+                cooldown: 0,
+                ...st
+            });
+            playTone(600, 'triangle', 0.08);
+            effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 30, text: `➕ 增援【${st.name}】！`, color: '#86efac', life: 35 });
+        });
+
+        document.querySelectorAll('.mini-btn[data-form]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formation = btn.dataset.form;
+                document.querySelectorAll('.mini-btn[data-form]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // 主遊戲迴圈
+        function gameLoop() {
+            ctx.fillStyle = '#1c1510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 戰場網格與水墨紋理
+            ctx.strokeStyle = 'rgba(217, 119, 6, 0.08)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 60) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 60) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            if (gameRunning) {
+                const hero = getActiveHero();
+                const standby = getStandbyHero();
+                // 待命副將緩慢回血
+                if (standby.hp > 0 && standby.hp < standby.maxHp) {
+                    standby.hp = Math.min(standby.maxHp, standby.hp + 0.06);
+                }
+
+                // 玩家移動
+                let vx = 0, vy = 0;
+                if (moveInput.up) vy -= 1;
+                if (moveInput.down) vy += 1;
+                if (moveInput.left) { vx -= 1; playerPos.facing = -1; }
+                if (moveInput.right) { vx += 1; playerPos.facing = 1; }
+                if (vx !== 0 || vy !== 0) {
+                    const len = Math.hypot(vx, vy);
+                    playerPos.x = Math.max(30, Math.min(canvas.width - 30, playerPos.x + (vx / len) * hero.speed));
+                    playerPos.y = Math.max(70, Math.min(canvas.height - 40, playerPos.y + (vy / len) * hero.speed));
+                }
+                if (playerPos.invuln > 0) playerPos.invuln--;
+                if (playerPos.slashTimer > 0) playerPos.slashTimer--;
+
+                // 我方士兵陣型與自動作戰
+                soldiers.forEach((s, i) => {
+                    let tx = playerPos.x - 45;
+                    let ty = playerPos.y + ((i % 6) - 2.5) * 24;
+                    if (formation === 'wedge') {
+                        tx = playerPos.x + 35 - Math.abs((i % 6) - 2.5) * 14;
+                    } else if (formation === 'circle') {
+                        const ang = (i / soldiers.length) * Math.PI * 2 + Date.now() * 0.0015;
+                        tx = playerPos.x + Math.cos(ang) * 58;
+                        ty = playerPos.y + Math.sin(ang) * 58;
+                    } else if (formation === 'scatter' && enemies.length > 0) {
+                        const target = enemies[i % enemies.length];
+                        tx = target.x - 18;
+                        ty = target.y;
+                    }
+                    s.x += (tx - s.x) * 0.07;
+                    s.y += (ty - s.y) * 0.07;
+
+                    if (s.cooldown > 0) s.cooldown--;
+                    else if (enemies.length > 0) {
+                        const nearest = enemies.reduce((a, b) => Math.hypot(b.x - s.x, b.y - s.y) < Math.hypot(a.x - s.x, a.y - s.y) ? b : a);
+                        if (Math.hypot(nearest.x - s.x, nearest.y - s.y) <= s.range) {
+                            nearest.hp -= s.atk;
+                            s.cooldown = 32;
+                            if (s.range > 60) {
+                                projectiles.push({ x: s.x, y: s.y, vx: (nearest.x - s.x) * 0.12, vy: (nearest.y - s.y) * 0.12, dmg: 0, color: s.color, life: 12 });
+                            }
+                        }
+                    }
+
+                    // 繪製士兵
+                    ctx.fillStyle = s.color;
+                    ctx.beginPath(); ctx.arc(s.x, s.y, 8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif'; ctx.fillText(s.name[0], s.x - 5, s.y + 3);
+                });
+
+                // 投射物
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const p = projectiles[i];
+                    p.x += p.vx; p.y += p.vy; p.life--;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+                    if (p.dmg > 0) {
+                        enemies.forEach(e => {
+                            if (Math.hypot(e.x - p.x, e.y - p.y) < 22) {
+                                e.hp -= p.dmg;
+                                p.life = 0;
+                                hero.musou = Math.min(100, hero.musou + 4);
+                            }
+                        });
+                    }
+                    if (p.life <= 0) projectiles.splice(i, 1);
+                }
+
+                // 敵軍更新與繪製
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const e = enemies[i];
+                    const ang = Math.atan2(playerPos.y - e.y, playerPos.x - e.x);
+                    e.x += Math.cos(ang) * e.speed;
+                    e.y += Math.sin(ang) * e.speed;
+
+                    if (Math.hypot(playerPos.x - e.x, playerPos.y - e.y) < (e.isBoss ? 34 : 22) && playerPos.invuln <= 0) {
+                        hero.hp -= e.atk * 0.12;
+                        if (hero.hp <= 0) {
+                            hero.hp = 0;
+                            if (standby.hp > 0) {
+                                switchGeneral();
+                            } else {
+                                heroStates[0].hp = heroStates[0].maxHp;
+                                heroStates[1].hp = heroStates[1].maxHp;
+                                effects.push({ type: 'text', x: playerPos.x, y: playerPos.y - 45, text: '全軍重整旗鼓！', color: '#fbbf24', life: 50 });
+                            }
+                        }
+                    }
+
+                    if (e.hp <= 0) {
+                        kills++;
+                        hero.musou = Math.min(100, hero.musou + 10);
+                        enemies.splice(i, 1);
+                        const stg = STAGES[stageIdx % STAGES.length];
+                        if (kills >= stg.target) {
+                            stageIdx++;
+                            kills = 0;
+                            enemies = [];
+                            spawnStageWave();
+                            effects.push({ type: 'text', x: canvas.width * 0.5, y: canvas.height * 0.4, text: `🎉 攻克關卡！進入【${STAGES[stageIdx % STAGES.length].name}】`, color: '#fde047', life: 80 });
+                        } else if (enemies.length < 6) {
+                            enemies.push({
+                                x: canvas.width - 30,
+                                y: 80 + Math.random() * (canvas.height - 160),
+                                hp: 55 + stageIdx * 15,
+                                maxHp: 55 + stageIdx * 15,
+                                atk: 6 + stageIdx * 2,
+                                speed: 1.5,
+                                isBoss: false,
+                                name: '敵軍援兵'
+                            });
+                        }
+                        continue;
+                    }
+
+                    const r = e.isBoss ? 22 : 11;
+                    ctx.fillStyle = e.isBoss ? '#b91c1c' : '#dc2626';
+                    ctx.beginPath(); ctx.arc(e.x, e.y, r, 0, Math.PI * 2); ctx.fill();
+                    if (e.isBoss) {
+                        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3; ctx.stroke();
+                        ctx.fillStyle = '#fde047'; ctx.font = 'bold 13px sans-serif';
+                        ctx.fillText(`👑 ${e.name}`, e.x - 26, e.y - 28);
+                    }
+                    // 血條
+                    ctx.fillStyle = '#000'; ctx.fillRect(e.x - r, e.y - r - 7, r * 2, 4);
+                    ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - r, e.y - r - 7, r * 2 * Math.max(0, e.hp / e.maxHp), 4);
+                }
+
+                // 繪製玩家主將
+                ctx.save();
+                if (playerPos.invuln > 0 && Math.floor(playerPos.invuln / 4) % 2 === 0) ctx.globalAlpha = 0.5;
+                ctx.fillStyle = hero.color;
+                ctx.beginPath(); ctx.arc(playerPos.x, playerPos.y, 18, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#fde047'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.font = '18px sans-serif';
+                ctx.fillText(hero.icon, playerPos.x - 11, playerPos.y + 6);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(`${hero.name}`, playerPos.x - 16, playerPos.y - 24);
+                ctx.restore();
+
+                // 特效
+                for (let i = effects.length - 1; i >= 0; i--) {
+                    const fx = effects[i];
+                    fx.life--;
+                    if (fx.type === 'ring') {
+                        fx.r += (fx.maxR - fx.r) * 0.2;
+                        ctx.strokeStyle = fx.color; ctx.lineWidth = 4;
+                        ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2); ctx.stroke();
+                    } else if (fx.type === 'slash') {
+                        ctx.strokeStyle = fx.color; ctx.lineWidth = 6;
+                        ctx.beginPath();
+                        ctx.arc(playerPos.x, playerPos.y, 52, fx.facing > 0 ? -0.9 : Math.PI - 0.9, fx.facing > 0 ? 0.9 : Math.PI + 0.9);
+                        ctx.stroke();
+                    } else if (fx.type === 'text') {
+                        fx.y -= 0.7;
+                        ctx.fillStyle = fx.color; ctx.font = 'bold 16px sans-serif';
+                        ctx.fillText(fx.text, fx.x - 45, fx.y);
+                    }
+                    if (fx.life <= 0) effects.splice(i, 1);
+                }
+
+                updateHUD();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        renderRoster();
+        gameLoop();
     </script>
 </body>
 </html>

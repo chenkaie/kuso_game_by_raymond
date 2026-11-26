@@ -2,7 +2,7 @@
 
 Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 
-> 更新日期：2026-11-25。此 repository 為靜態遊戲入口與原始碼收藏。外部 Sites 的原始碼尚未匯入，外部網站的存取權與功能未重新測試。
+> 更新日期：2026-11-26。此 repository 為靜態遊戲入口與原始碼收藏。外部 Sites 的原始碼尚未匯入，外部網站的存取權與功能未重新測試。
 
 ## 什麼是糞 Game？
 
@@ -15,11 +15,11 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 遊戲 | 最近確認更新／版本 | 類型 | 入口／匯入狀態及說明 |
 |---|---|---|---|
 | 三國方塊無雙（Three Kingdoms Voxel Warriors） | v2.1 | 3D 動作闖關／方塊建造 | [立即遊玩](https://chenkaie.github.io/minecraft-sanguo/) · [原始 Repo](https://github.com/chenkaie/minecraft-sanguo)；12 位武將、6 關 Boss、哥吉拉三段變身、三種難度、中英雙語、鍵鼠及觸控 |
-| 方塊王國 2P／3D 麥塊生存遊戲 | 2026-11-25 匯入（版本日期未載） | 3D 沙盒生存 | [開始遊戲](games/minecraft-survival/index.html)；武器與背包完整版：日夜交替、殭屍、挖掘、中文智慧合成、手持武器與觸控。此 HTML 為單人版，原 2P 創造模式仍待取得原始碼。 |
+| 方塊王國 2P／3D 麥塊生存遊戲 | 2026-11-26 修正 | 3D 沙盒生存 | [開始遊戲](games/minecraft-survival/index.html)；武器與背包完整版：日夜交替、殭屍、挖掘、中文智慧合成、手持武器與觸控。殭屍水平攻擊距離已修正。此 HTML 為單人版，原 2P 創造模式仍待取得原始碼。 |
 | 宇宙卡牌大亂鬥 | 2026-11-15 | 卡牌對戰 | [HTML 修正版](games/crossover-cards/index.html) |
 | 畫線交鋒 | 2026-11-09 | 策略對戰 | 待確認原始網址及原始碼 |
 | 星際遠征：銀河飛行員 | 2026-11-07 | 太空飛行 | [原始 Sites（v8）](https://starflight-castle-nov1.chenkaie.chatgpt.site) |
-| 新手射擊訓練場 | 2026-11-07 | 射擊 | [原始 Sites（v10）](https://easy-target-arena-kent.chenkaie.chatgpt.site) |
+| 新手射擊訓練場 | v15（2026-11-26 確認） | 射擊 | [原始 Sites（v15）](https://easy-target-arena-kent.chenkaie.chatgpt.site)；四種訓練場及 XP；完整原始碼待匯出 |
 | 水果貪吃蛇 | 2026-11-01 | 休閒 | [原始 Sites（v2）](https://fruit-snake-garden-kent-1101.chenkaie.chatgpt.site) |
 | 光劍合成大戰／第一人稱 3D 火柴人光劍對決 | 2026-11-25 匯入（版本日期未載） | 偽 3D 第一人稱格鬥 | [開始遊戲](games/first-person-lightsaber/index.html) · [原修復版](games/lightsaber-fusion/index.html)；新匯入版：左右移動、步伐與打擊震動、掩體及光劍／鐮刀／戰斧融合。原修復版功能不同，暫保留兩個入口。 |
 | 劍影對決｜火柴人競技場 | 2026-10-30 | 2D 劍術對戰 | [原始 Sites（v1）](https://stickman-sword-arena-kent.chenkaie.chatgpt.site)，不同於第一人稱光劍合成大戰 |
@@ -35,9 +35,9 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 | 國王親征：帝國崛起 | 2026-11-25 匯入（版本日期未載） | 2D 即時戰略／塔防 | [開始遊戲](games/kings-march/index.html)；操控國王、手動徵兵、三個敵方王國，以及跟隨、守城、巡邏、總攻四種軍團指令。 |
 | 3D 樂高城堡拉鋸戰 | 2026-11-25 匯入（版本日期未載） | 3D 橫向對線／塔防 | [開始遊戲](games/lego-castle/index.html)；樂高兵種、火球技能、金庫升級、城堡攻防與每三關出現的黑武士 Boss。 |
 | 賽博龐克 AI 核心入侵 | 2026-11-25 匯入（版本日期未載） | 2D 街機生存射擊 | [開始遊戲](games/cyber-strike/index.html)；霓虹風格、AI 護衛無人機、XP 升級、多重彈道與射速強化；鍵盤與滑鼠操作。 |
-| 星界召喚：幻境卡牌 | 2026-11-25 匯入（版本日期未載） | 抽卡／回合制 RPG | [開始遊戲](games/astral-cards/index.html)；雙重抽卡保底、8 名英雄、自動升星、屬性倍率及免費補給箱。 |
+| 星界召喚：幻境卡牌 | 2026-11-26 修正 | 抽卡／回合制 RPG | [開始遊戲](games/astral-cards/index.html)；雙重抽卡保底、8 名英雄、自動升星、屬性倍率及免費補給箱；Boss HP 顯示統一為原本的 200 勝利門檻。 |
 | 3D 樂高殭屍生存遊戲（CS 樂高版） | 2026-11-25 匯入（版本日期未載） | 3D 第一人稱射擊 | [開始遊戲](games/lego-zombie/index.html)；樂高角色、NPC 隊友、狙擊開鏡、投擲物及牆壁阻擋子彈。 |
-| 三國無雙：群雄逐鹿 | 2026-11-25 匯入（版本日期未載） | 2D 無雙動作／領兵戰術 | [開始遊戲](games/sanguo-warlords/index.html)；6 位三國名將、主副將切換、無雙攻擊與四種軍陣指令。 |
+| 三國無雙：群雄逐鹿 | 2026-11-26 匯入完整版 | 2D 無雙動作／領兵戰術 | [開始遊戲](games/sanguo-warlords/index.html) · [完整 ZIP](downloads/sanguo-warlords-complete.zip) · [遊戲說明](games/sanguo-warlords/README.md)；6 位名將、雙將切換、六大兵種、四種軍陣、五大戰役、鍵盤及觸控；不依賴 CDN。 |
 
 新增來源：使用者提供的《最新10款Game完整原始碼與說明書.zip》。10 個 HTML 與原始 Markdown 說明書已完整匯入並核對 Git blob SHA；JavaScript 語法檢查通過，尚未逐一進行瀏覽器遊玩測試。部分遊戲仍需連線載入 Tailwind CSS 或 Three.js CDN。完整下載：[10 款遊戲原始碼 ZIP](downloads/ten-games-source.zip)（重新打包，保留原始檔名與內容） · [原始說明書](docs/ten-games-guide.md)。目前維持 24 筆遊戲紀錄；光劍與麥塊遊戲暫維持同系列卡片，版本關係未證實，不移除已確認的其他實作。
 
@@ -47,9 +47,18 @@ Raymond 的遊戲收藏｜每款遊戲只保留目前能確認的最新版本。
 
 寵物／貓咪養成、甲蟲對戰擂台、武士對戰遊戲及太空戰機僅為可確認的製作對話紀錄，尚無可核對的原始碼或遊玩網址，不算作已移植遊戲。
 
+## 2026-11-26 更新紀錄
+
+- 群雄逐鹿：使用者提供的完整 ZIP 中 41,030-byte HTML 原樣取代先前 6,279-byte 簡版，Git blob SHA 與來源一致；JavaScript 已通過語法檢查。三個原始成員重新打包供下載，舊版可由 Git 歷史還原。原十款 ZIP 仍保留為當時的來源快照。
+- 3D 麥塊生存：殭屍攻擊距離改用水平 X/Z 軸距離，避免攝影機眼高使攻擊條件永遠不成立。
+- 星界召喚：Boss 血量顯示與勝利判斷共用 BOSS_HP=200，保留原實際難度，不將門檻提高至原畫面誤標的 300。
+- 射擊訓練場：只同步 v15 的版本與畫面文字備份。未取得完整專案源碼，沒有建立假移植或改寫原始 Sites。
+
+上述修正尚未逐一進行實際瀏覽器遊玩測試。
+
 ## Sites 原始碼移植
 
-已整理 8 款外部 Sites 的最新可取得版本、原始網址及畫面文字：[完整移植清單與驗收標準](docs/sites-migration.md)。其中新手射擊訓練場更新至 Sites v10。Library 目前只提供畫面文字擷取，不能匯出完整原始碼；直接下載網站亦未成功。這八款尚未完成移植。取得實際完整原始碼或靜態建置輸出後，才會改用本站遊戲入口。
+已整理 8 款外部 Sites 的最新可取得版本、原始網址及畫面文字：[完整移植清單與驗收標準](docs/sites-migration.md)。其中新手射擊訓練場已確認更新至 Sites v15。Library 目前只提供畫面文字擷取，不能匯出完整原始碼；直接下載網站亦未成功。這八款尚未完成移植。取得實際完整原始碼或靜態建置輸出後，才會改用本站遊戲入口。
 
 ## 長期維護原則
 

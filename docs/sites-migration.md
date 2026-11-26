@@ -1,6 +1,6 @@
 # Sites 遊戲移植清單與原始畫面文字備份
 
-更新日期：2026-11-25（Asia/Taipei）。下列 8 筆為 Library 目前可取得的遊戲 Sites 紀錄，排除學習網站與室內導覽。
+更新日期：2026-11-26（Asia/Taipei）。下列 8 筆為 Library 目前可取得的遊戲 Sites 紀錄，排除學習網站與室內導覽。
 
 **重要：這些是原始網站的文字擷取及版本資料，不是 HTML、JavaScript、CSS、圖片或完整遊戲原始碼。** 尚未完成移植，也未驗證外站遊玩功能。原始 Sites 保留不動。
 
@@ -8,7 +8,7 @@
 |---|---|---|---|
 | 畫線交鋒 | 未確認 | 待確認 | 待匯出原始碼 |
 | 星際遠征 · 銀河飛行員 | 8 | [Sites](https://starflight-castle-nov1.chenkaie.chatgpt.site) | 待匯出原始碼 |
-| 新手射擊訓練場 | 10 | [Sites](https://easy-target-arena-kent.chenkaie.chatgpt.site) | 待匯出原始碼 |
+| 新手射擊訓練場 | 15 | [Sites](https://easy-target-arena-kent.chenkaie.chatgpt.site) | 待匯出原始碼 |
 | 水果貪吃蛇 | 2 | [Sites](https://fruit-snake-garden-kent-1101.chenkaie.chatgpt.site) | 待匯出原始碼 |
 | 劍影對決｜火柴人競技場 | 1 | [Sites](https://stickman-sword-arena-kent.chenkaie.chatgpt.site) | 待匯出原始碼 |
 | 雙城爭霸：未來軍團 | 1 | [Sites](https://castle-future-legion.chenkaie.chatgpt.site) | 待匯出原始碼 |
@@ -142,7 +142,7 @@ PLANETARY COMMAND · 星球總部
 
 ### 新手射擊訓練場
 
-版本：10；https://easy-target-arena-kent.chenkaie.chatgpt.site
+版本：15（2026-11-26 確認）；https://easy-target-arena-kent.chenkaie.chatgpt.site
 
 # 新手射擊訓練場
 
@@ -150,7 +150,7 @@ PLANETARY COMMAND · 星球總部
 
 **擊倒 0 / 5**
 
-武器類別 步槍 衝鋒槍 手槍 投擲物選擇武器 AK-47 M4A1 HK416 FN SCAR-L Steyr AUG**AK-47 · 30 / 30**換彈 R按住連發 · 數值為遊戲設定
+武器類別 步槍 衝鋒槍 手槍 投擲物 近戰武器選擇武器 AK-47 M4A1 HK416 FN SCAR-L Steyr AUG**經驗值 0 XP · 可使用AK-47 · 30 / 30**換彈 R按住連發 · 數值為遊戲設定
 
 實物照片 · 維基百科
 
@@ -163,6 +163,16 @@ PLANETARY COMMAND · 星球總部
 <a href="https://en.wikipedia.org/wiki/File:AK-47_type_II_noBG.png">原圖、作者與授權</a> · <a href="https://en.wikipedia.org/wiki/AK-47">維基百科條目</a>
 
 圖片保持原貌，未修改。可收起此區域繼續遊玩。
+
+選擇訓練場
+
+## 選擇訓練場
+
+新手射擊訓練場士兵偶爾走動，但不會反擊；擊倒可獲得 XP。標靶射擊訓練場練習瞄準 5 個圓形標靶，命中一次即可；不增加 XP。中等訓練場士兵拿近戰武器追擊！保持距離，擊倒全部士兵。高等訓練場5 名士兵使用同類別的不同武器；切換類別時敵人跟著更換。
+
+##
+
+重新挑戰選擇訓練場
 
 瞄準胸口，擊倒 5 名訓練士兵！他們不會反擊。
 

@@ -32,7 +32,7 @@
             </div>
             <div class="bg-slate-900 p-4 rounded-2xl border border-rose-500/30">
                 <h2 class="font-bold text-rose-300 mb-2">⚔️ 屬性相剋回合制關卡 (水>火>風>水)</h2>
-                <p class="text-xs text-slate-400 mb-3">當前關卡首領：<span id="boss-info" class="text-amber-300 font-bold">熔岩巨龍 (🔥火屬性 | HP 300)</span></p>
+                <p class="text-xs text-slate-400 mb-3">當前關卡首領：<span id="boss-info" class="text-amber-300 font-bold">熔岩巨龍 (🔥火屬性 | HP 200)</span></p>
                 <button onclick="battleStage()" class="w-full py-3 bg-rose-600 hover:bg-rose-500 rounded-xl font-black mb-2">出戰挑戰關卡 (+320💎)</button>
                 <div id="battle-log" class="text-xs text-emerald-300 bg-slate-950 p-3 rounded-xl min-h-[60px]">點擊出戰，系統將自動派出最強英雄並計算屬性剋制加成！</div>
             </div>
@@ -49,6 +49,7 @@
             { name: "疾風遊俠", rarity: "SSR", elem: "風", atk: 82 }, { name: "聖殿騎士", rarity: "SR", elem: "光", atk: 55 },
             { name: "潮汐祭司", rarity: "SR", elem: "水", atk: 50 }, { name: "烈火戰士", rarity: "R", elem: "火", atk: 35 }
         ];
+        const BOSS_HP = 200; // Keep the original win threshold and use it for the displayed HP.
         let gems = 1600, pitySSR = 0, pityUR = 0, owned = {};
         function freeSupply() { gems += 800; updateUI(); }
         function summon(times) {
@@ -76,7 +77,7 @@
             const best = list.sort((a,b)=>b.atk-a.atk)[0];
             const bonus = best.elem === "水" ? 1.5 : 1.0;
             const dmg = Math.floor(best.atk * bonus * 3);
-            if(dmg >= 200) {
+            if(dmg >= BOSS_HP) {
                 gems += 320;
                 document.getElementById('battle-log').textContent = `⚔️ 派出【${best.name}】(${best.elem})，觸發 ${bonus}x 屬性倍率造成 ${dmg} 傷害！挑戰成功獲得 320 星鑽！`;
             } else {
@@ -85,6 +86,7 @@
             updateUI();
         }
         function updateUI() {
+            document.getElementById('boss-info').textContent = '熔岩巨龍 (🔥火屬性 | HP ' + BOSS_HP + ')';
             document.getElementById('gems').textContent = gems;
             document.getElementById('pity-ssr').textContent = pitySSR;
             document.getElementById('pity-ur').textContent = pityUR;

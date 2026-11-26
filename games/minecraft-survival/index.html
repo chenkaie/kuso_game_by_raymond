@@ -468,7 +468,8 @@
                 }
 
                 zombies.forEach(z => {
-                    const zDir = new THREE.Vector3().subVectors(camera.position, z.position), dist = zDir.length();
+                    const zDir = new THREE.Vector3().subVectors(camera.position, z.position);
+                    const dist = Math.hypot(zDir.x, zDir.z); // Horizontal reach; camera eye height must not block zombie attacks.
                     z.position.addScaledVector(zDir.normalize(), 1.8 * delta); z.position.y = 0; z.lookAt(camera.position.x, 0, camera.position.z);
                     if (dist < 1.8) {
                         z.userData.hitCooldown -= delta;
